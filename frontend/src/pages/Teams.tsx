@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import '../styles/Teams.css';
-import axios from 'axios';
+import { api } from '../services/api';
 import { Favorite, FavoriteBorder, NotificationsActive, NotificationsOff } from '@mui/icons-material';
 import { CircularProgress, IconButton, Tooltip, Badge, Dialog, DialogTitle, DialogContent, DialogActions, Button, Switch, FormControlLabel, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
-import { useDispatch } from 'react-redux';
-import { addNotification } from '../store/slices/notificationSlice';
 
 interface Team {
   id: number;
@@ -52,12 +50,11 @@ const Teams: React.FC = () => {
     matchEnd: true,
     beforeMatch: 15
   });
-  const dispatch = useDispatch();
 
   const fetchTeams = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:3001/api/teams', {
+      const response = await api.get('/teams', {
         params: {
           per_page: 500,
           game: selectedGame !== 'all' ? selectedGame : undefined,

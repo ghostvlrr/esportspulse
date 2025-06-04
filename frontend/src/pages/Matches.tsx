@@ -16,7 +16,6 @@ import {
   Chip,
   IconButton,
   Tooltip,
-  useTheme,
   alpha,
   Dialog,
   DialogTitle,
@@ -45,6 +44,7 @@ import { format as formatDate, isToday, isTomorrow, isYesterday } from 'date-fns
 import { tr } from 'date-fns/locale';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
+import '../styles/Matches.css';
 
 interface NotificationSettings {
   enabled: boolean;
