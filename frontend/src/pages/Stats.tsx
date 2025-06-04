@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Grid, Typography, Box, Tabs, Tab, CircularProgress } from '@mui/material';
 import { api } from '../services/api';
-import TeamStatsTable from '../components/TeamStatsTable';
-import PlayerStatsTable from '../components/PlayerStatsTable';
+// import TeamStatsTable from '../components/TeamStatsTable';
+// import PlayerStatsTable from '../components/PlayerStatsTable';
 import '../styles/Stats.css';
 
 interface TeamStats {
