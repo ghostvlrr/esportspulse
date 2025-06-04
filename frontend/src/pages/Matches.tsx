@@ -307,7 +307,6 @@ const getTournamentLogo = (match: Match) => {
 
 const Matches: React.FC = () => {
   const { t } = useTranslation();
-  const theme = useTheme();
   const [matches, setMatches] = useState<Match[]>([]);
   const [filter, setFilter] = useState<FilterType>('all');
   const [favorites, setFavorites] = useState<string[]>(() => {

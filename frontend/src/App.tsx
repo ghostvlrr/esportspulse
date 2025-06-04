@@ -40,7 +40,7 @@ function App() {
     // Bildirimleri yükle
     const fetchNotifications = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/notifications`);
+        await axios.get(`${process.env.REACT_APP_API_BASE_URL}/notifications`);
         // dispatch(setNotifications(response.data));
       } catch (error) {
         console.error('Bildirimler yüklenirken hata:', error);
