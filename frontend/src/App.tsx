@@ -54,7 +54,7 @@ function App() {
     if (!user?.id) return;
     const socket = io(SOCKET_URL);
     socket.emit('join', user.id);
-    socket.on('notification', (data: Omit<NotificationItem, 'id'>) => {
+    socket.on('notification', (data: any) => {
       // dispatch(addNotification({
       //   ...data,
       //   id: `${data.type}-${Date.now()}`
