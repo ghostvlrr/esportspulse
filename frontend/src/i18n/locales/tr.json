@@ -1,0 +1,113 @@
+{
+  "common": {
+    "loading": "Yükleniyor...",
+    "error": "Bir hata oluştu",
+    "retry": "Tekrar Dene",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "search": "Ara...",
+    "noResults": "Sonuç bulunamadı",
+    "back": "Geri",
+    "next": "İleri",
+    "previous": "Önceki",
+    "more": "Daha Fazla"
+  },
+  "auth": {
+    "login": "Giriş Yap",
+    "register": "Kayıt Ol",
+    "logout": "Çıkış Yap",
+    "email": "E-posta",
+    "password": "Şifre",
+    "confirmPassword": "Şifre Tekrar",
+    "username": "Kullanıcı Adı",
+    "forgotPassword": "Şifremi Unuttum",
+    "rememberMe": "Beni Hatırla",
+    "loginError": "Giriş başarısız",
+    "registerError": "Kayıt başarısız",
+    "logoutError": "Çıkış başarısız"
+  },
+  "navigation": {
+    "matches": "Maçlar",
+    "teams": "Takımlar",
+    "news": "Haberler",
+    "favorites": "Favoriler",
+    "stats": "İstatistikler",
+    "profile": "Profil",
+    "settings": "Ayarlar"
+  },
+  "matches": {
+    "live": "Canlı",
+    "upcoming": "Yaklaşan",
+    "past": "Geçmiş",
+    "score": "Skor",
+    "vs": "vs",
+    "startTime": "Başlangıç",
+    "endTime": "Bitiş",
+    "status": "Durum",
+    "tournament": "Turnuva",
+    "noMatches": "Maç bulunamadı",
+    "addToFavorites": "Favorilere Ekle",
+    "removeFromFavorites": "Favorilerden Çıkar"
+  },
+  "teams": {
+    "ranking": "Sıralama",
+    "stats": "İstatistikler",
+    "players": "Oyuncular",
+    "matches": "Maçlar",
+    "achievements": "Başarılar",
+    "noTeams": "Takım bulunamadı",
+    "winRate": "Kazanma Oranı",
+    "totalMatches": "Toplam Maç",
+    "wins": "Galibiyet",
+    "losses": "Mağlubiyet"
+  },
+  "news": {
+    "latest": "Son Haberler",
+    "popular": "Popüler",
+    "categories": "Kategoriler",
+    "readMore": "Devamını Oku",
+    "publishedAt": "Yayınlanma",
+    "author": "Yazar",
+    "noNews": "Haber bulunamadı",
+    "allCategories": "Tüm Kategoriler"
+  },
+  "notifications": {
+    "title": "Bildirim Ayarları",
+    "enable": "Bildirimleri Etkinleştir",
+    "beforeMatch": "Maç Öncesi Bildirim Zamanı",
+    "minutes": {
+      "5": "5 dakika önce",
+      "15": "15 dakika önce",
+      "30": "30 dakika önce",
+      "60": "1 saat önce"
+    },
+    "matchStart": "Maç Başlangıcında Bildir",
+    "matchEnd": "Maç Sonunda Bildir",
+    "scoreUpdate": "Skor Güncellemelerinde Bildir",
+    "cancel": "İptal",
+    "save": "Kaydet",
+    "edit": "Bildirimleri Düzenle",
+    "add": "Bildirim Ekle",
+    "disabled": {
+      "completed": "Tamamlanan maçlar için bildirim açılamaz",
+      "live": "Canlı maçlar için bildirim açılamaz"
+    },
+    "markAllAsRead": "Tümünü Okundu İşaretle",
+    "noNotifications": "Bildirim bulunmuyor",
+    "new": "Yeni",
+    "match": "Maç",
+    "news": "Haber",
+    "system": "Sistem"
+  },
+  "errors": {
+    "general": "Bir şeyler yanlış gitti",
+    "notFound": "Sayfa bulunamadı",
+    "unauthorized": "Yetkisiz erişim",
+    "forbidden": "Erişim engellendi",
+    "serverError": "Sunucu hatası",
+    "networkError": "Ağ hatası",
+    "validationError": "Doğrulama hatası"
+  }
+} 

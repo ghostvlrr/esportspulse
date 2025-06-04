@@ -1,0 +1,26 @@
+{
+  "tagline": "E-Spor Dünyasının Nabzı",
+  "rights": "Tüm hakları saklıdır",
+  "notifications": {
+    "title": "Bildirim Ayarları",
+    "enable": "Bildirimleri Etkinleştir",
+    "beforeMatch": "Maç Öncesi Bildirim Zamanı",
+    "minutes": {
+      "5": "5 dakika önce",
+      "15": "15 dakika önce",
+      "30": "30 dakika önce",
+      "60": "1 saat önce"
+    },
+    "matchStart": "Maç Başlangıcında Bildir",
+    "matchEnd": "Maç Sonunda Bildir",
+    "scoreUpdate": "Skor Güncellemelerinde Bildir",
+    "cancel": "İptal",
+    "save": "Kaydet",
+    "edit": "Bildirimleri Düzenle",
+    "add": "Bildirim Ekle",
+    "disabled": {
+      "completed": "Tamamlanan maçlar için bildirim açılamaz",
+      "live": "Canlı maçlar için bildirim açılamaz"
+    }
+  }
+} 

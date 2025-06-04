@@ -1,0 +1,94 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search...",
+    "noResults": "No results found",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "more": "More"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "username": "Username",
+    "forgotPassword": "Forgot Password",
+    "rememberMe": "Remember Me",
+    "loginError": "Login failed",
+    "registerError": "Registration failed",
+    "logoutError": "Logout failed"
+  },
+  "navigation": {
+    "matches": "Matches",
+    "teams": "Teams",
+    "news": "News",
+    "favorites": "Favorites",
+    "stats": "Stats",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "matches": {
+    "live": "Live",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "score": "Score",
+    "vs": "vs",
+    "startTime": "Start Time",
+    "endTime": "End Time",
+    "status": "Status",
+    "tournament": "Tournament",
+    "noMatches": "No matches found",
+    "addToFavorites": "Add to Favorites",
+    "removeFromFavorites": "Remove from Favorites"
+  },
+  "teams": {
+    "ranking": "Ranking",
+    "stats": "Stats",
+    "players": "Players",
+    "matches": "Matches",
+    "achievements": "Achievements",
+    "noTeams": "No teams found",
+    "winRate": "Win Rate",
+    "totalMatches": "Total Matches",
+    "wins": "Wins",
+    "losses": "Losses"
+  },
+  "news": {
+    "latest": "Latest News",
+    "popular": "Popular",
+    "categories": "Categories",
+    "readMore": "Read More",
+    "publishedAt": "Published At",
+    "author": "Author",
+    "noNews": "No news found",
+    "allCategories": "All Categories"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllAsRead": "Mark All as Read",
+    "noNotifications": "No notifications",
+    "new": "New",
+    "match": "Match",
+    "news": "News",
+    "system": "System"
+  },
+  "errors": {
+    "general": "Something went wrong",
+    "notFound": "Page not found",
+    "unauthorized": "Unauthorized access",
+    "forbidden": "Access forbidden",
+    "serverError": "Server error",
+    "networkError": "Network error",
+    "validationError": "Validation error"
+  }
+} 

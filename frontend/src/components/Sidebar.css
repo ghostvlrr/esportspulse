@@ -1,0 +1,114 @@
+.sidebar {
+  width: 250px;
+  height: 100vh;
+  background: linear-gradient(145deg, #0A0A0A 0%, #171717 100%);
+  color: #fff;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 30px;
+  text-align: center;
+  color: #00F5FF;
+  text-shadow: 0px 0px 10px rgba(0, 245, 255, 0.5);
+}
+
+nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+nav a {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+nav a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transform: translateX(5px);
+}
+
+nav a.active {
+  background: rgba(0, 245, 255, 0.1);
+  color: #00F5FF;
+  border-left: 3px solid #00F5FF;
+}
+
+.notification-badge {
+  background: rgba(255, 0, 245, 0.2);
+  color: #FF00F5;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  border: 1px solid rgba(255, 0, 245, 0.3);
+}
+
+.footer {
+  margin-top: auto;
+  text-align: center;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.theme-selector {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.theme-selector .MuiIconButton-root {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.theme-selector .MuiIconButton-root:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+/* Tema önizleme stilleri */
+.default-theme {
+  background: linear-gradient(145deg, #0A0A0A 0%, #171717 100%);
+}
+
+.space-theme {
+  background: radial-gradient(circle at center, rgba(0, 245, 255, 0.1) 0%, transparent 70%);
+}
+
+.sunset-theme {
+  background: linear-gradient(45deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 217, 61, 0.1) 100%);
+}
+
+.neon-theme {
+  background: #0A0A0A;
+  box-shadow: 0 0 5px #00FF00, 0 0 10px #00FF00;
+}
+
+.ocean-theme {
+  background: linear-gradient(45deg, rgba(100, 255, 218, 0.1) 0%, rgba(0, 180, 216, 0.1) 100%);
+} 
