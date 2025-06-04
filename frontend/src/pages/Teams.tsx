@@ -28,12 +28,6 @@ interface NotificationSettings {
 
 const beforeMatchOptions = [5, 10, 15, 30, 45, 60];
 
-const notificationMessages = {
-  matchStart: (team: string) => `Hey! ${team} takımının maçı başlamak üzere, başarılar dileriz! 🏆`,
-  scoreChange: (team: string) => `Skor değişti! ${team} mücadeleye devam ediyor, heyecan dorukta! ⚡`,
-  matchEnd: (team: string) => `${team} takımının maçı sona erdi. Harika bir mücadeleydi! 👏`
-};
-
 const Teams: React.FC = () => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
@@ -138,18 +132,6 @@ const Teams: React.FC = () => {
   const hasActiveNotifications = (teamId: number) => {
     const settings = notificationSettings[teamId];
     return settings && settings.enabled && (settings.matchStart || settings.scoreChange || settings.matchEnd);
-  };
-
-  const simulateNotification = (type: keyof typeof notificationMessages, teamName: string) => {
-    toast.info(notificationMessages[type](teamName), { autoClose: 5000 });
-    dispatch(addNotification({
-      id: `${teamName}-${type}-${Date.now()}`,
-      title: teamName,
-      message: notificationMessages[type](teamName),
-      timestamp: new Date(),
-      read: false,
-      type: type as 'matchStart' | 'scoreChange' | 'matchEnd'
-    }));
   };
 
   const isFavorite = (teamId: number) => favoriteTeams.includes(teamId);
@@ -305,13 +287,6 @@ const Teams: React.FC = () => {
                 </IconButton>
               </Tooltip>
             </div>
-            {hasActiveNotifications(team.id) && (
-              <div style={{marginTop: 8, display: 'flex', gap: 8}}>
-                <Button size="small" variant="outlined" onClick={() => simulateNotification('matchStart', team.name)}>Maç Başlangıcı Bildirimi</Button>
-                <Button size="small" variant="outlined" onClick={() => simulateNotification('scoreChange', team.name)}>Skor Bildirimi</Button>
-                <Button size="small" variant="outlined" onClick={() => simulateNotification('matchEnd', team.name)}>Maç Sonu Bildirimi</Button>
-              </div>
-            )}
           </motion.div>
         ))}
       </div>
