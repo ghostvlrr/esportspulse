@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Grid, Typography, Box, Tabs, Tab, CircularProgress } from '@mui/material';
 import { api } from '../services/api';
-import FavoriteItem from '../components/FavoriteItem';
+// import FavoriteItem from '../components/FavoriteItem';
 import '../styles/Favorites.css';
 
 interface FavoriteItem {
