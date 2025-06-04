@@ -7,9 +7,20 @@ const path = require('path');
 const socketIo = require('socket.io');
 const puppeteer = require('puppeteer');
 const http = require('http');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 const port = process.env.PORT || 3001;
+
+// Rate limiting configuration
+const limiter = rateLimit({
+  windowMs: process.env.RATE_LIMIT_WINDOW_MS || 900000, // 15 minutes
+  max: process.env.RATE_LIMIT_MAX_REQUESTS || 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.'
+});
+
+// Apply rate limiting to all routes
+app.use(limiter);
 
 app.use(cors({
   origin: [
