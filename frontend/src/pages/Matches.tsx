@@ -41,9 +41,6 @@ import {
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format as formatDate, isToday, isTomorrow, isYesterday } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { toast } from 'react-toastify';
@@ -197,7 +194,6 @@ const NotificationSwitch = styled(Switch)(({ theme }) => ({
   },
 }));
 
-const DEFAULT_TEAM_LOGO = '/logos/default-team-logo.svg';
 const DEFAULT_TOURNAMENT_LOGO = '/logos/default-tournament-logo.svg';
 
 const getDateLabel = (date: Date | null | undefined) => {
@@ -218,24 +214,6 @@ const getDateLabel = (date: Date | null | undefined) => {
     return '-';
   }
 };
-
-const TeamLogosCell = styled(TableCell)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: theme.spacing(2),
-  minWidth: 220,
-  borderBottom: `1px solid ${theme.palette.divider}`,
-  padding: theme.spacing(1.5, 2),
-}));
-
-const ScoreCell = styled(TableCell)(({ theme }) => ({
-  textAlign: 'center',
-  fontWeight: 700,
-  fontSize: '1.2rem',
-  minWidth: 80,
-  borderBottom: `1px solid ${theme.palette.divider}`,
-  padding: theme.spacing(1.5, 2),
-}));
 
 const StatusCell = styled(TableCell)(({ theme }) => ({
   textAlign: 'center',

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import '../styles/Teams.css';
 import axios from 'axios';
-import { Favorite, FavoriteBorder, Notifications, NotificationsActive, NotificationsOff } from '@mui/icons-material';
-import { CircularProgress, IconButton, Tooltip, Badge, Dialog, DialogTitle, DialogContent, DialogActions, Button, Switch, FormControlLabel, TextField, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
+import { Favorite, FavoriteBorder, NotificationsActive, NotificationsOff } from '@mui/icons-material';
+import { CircularProgress, IconButton, Tooltip, Badge, Dialog, DialogTitle, DialogContent, DialogActions, Button, Switch, FormControlLabel, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import ClearIcon from '@mui/icons-material/Clear';

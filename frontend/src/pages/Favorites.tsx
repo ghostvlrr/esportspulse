@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Grid, Typography, Box, Tabs, Tab, CircularProgress } from '@mui/material';
-import { api } from '../services/api';
+// import { Container, Grid, Typography, Box, Tabs, Tab, CircularProgress } from '@mui/material';
 // import FavoriteItem from '../components/FavoriteItem';
 import '../styles/Favorites.css';
+import { api } from '../services/api';
 
 interface FavoriteItem {
   id: number;

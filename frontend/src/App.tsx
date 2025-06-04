@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
@@ -14,8 +14,6 @@ import axios from 'axios';
 import io from 'socket.io-client';
 
 import ErrorBoundary from './components/ErrorBoundary';
-import LoadingSpinner from './components/LoadingSpinner';
-import Notification from './components/Notification';
 import theme from './theme';
 import { SOCKET_URL } from './services/api';
 
@@ -28,26 +26,22 @@ import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
 import Notifications from './pages/Notifications';
 
-import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from './store';
-import { markAllAsRead, setNotifications, markAsRead, addNotification, NotificationItem } from './store/slices/notificationSlice';
 import { Provider } from 'react-redux';
 import { store } from './store';
 import Sidebar from './components/Sidebar';
 
 function App() {
-  const { t } = useTranslation();
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { notifications, unreadCount } = useSelector((state: RootState) => state.notifications);
 
   useEffect(() => {
     // Bildirimleri yükle
     const fetchNotifications = async () => {
       try {
         const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/notifications`);
-        dispatch(setNotifications(response.data));
+        // dispatch(setNotifications(response.data));
       } catch (error) {
         console.error('Bildirimler yüklenirken hata:', error);
       }
@@ -61,10 +55,10 @@ function App() {
     const socket = io(SOCKET_URL);
     socket.emit('join', user.id);
     socket.on('notification', (data: Omit<NotificationItem, 'id'>) => {
-      dispatch(addNotification({
-        ...data,
-        id: `${data.type}-${Date.now()}`
-      }));
+      // dispatch(addNotification({
+      //   ...data,
+      //   id: `${data.type}-${Date.now()}`
+      // }));
     });
     return () => {
       socket.disconnect();
