@@ -8,8 +8,11 @@ const socketIo = require('socket.io');
 const puppeteer = require('puppeteer');
 const http = require('http');
 const rateLimit = require('express-rate-limit');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
 
 const app = express();
+const httpServer = createServer(app);
 const port = process.env.PORT || 3001;
 
 // Rate limiting configuration
@@ -22,16 +25,25 @@ const limiter = rateLimit({
 // Apply rate limiting to all routes
 app.use(limiter);
 
-app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'https://esportspulse.vercel.app',
-    'https://esportspulse-frontend.vercel.app'
-  ],
+// CORS ayarları
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+};
+
+app.use(cors(corsOptions));
+
+// Socket.io ayarları
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.SOCKET_CORS_ORIGIN || 'http://localhost:3000',
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
+});
+
 app.use(express.json());
 
 const API_BASE_URL = 'https://vlrggapi.vercel.app';
@@ -664,25 +676,15 @@ app.use((req, res) => {
   });
 });
 
-const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: [
-      'http://localhost:3000',
-      'https://esportspulse.vercel.app',
-      'https://esportspulse-frontend.vercel.app'
-    ],
-    methods: ['GET', 'POST'],
-    credentials: true
-  }
-});
-
-// Kullanıcı bağlantılarını yönet
+// Socket.io bağlantı yönetimi
 io.on('connection', (socket) => {
-  console.log('Bir kullanıcı bağlandı:', socket.id);
+  console.log('Yeni kullanıcı bağlandı:', socket.id);
+
   socket.on('join', (userId) => {
     socket.join(userId);
+    console.log(`Kullanıcı ${userId} odasına katıldı`);
   });
+
   socket.on('disconnect', () => {
     console.log('Kullanıcı ayrıldı:', socket.id);
   });
@@ -702,6 +704,6 @@ app.post('/api/notify-match-start', (req, res) => {
 });
 
 // Sunucuyu başlat
-server.listen(port, () => {
+httpServer.listen(port, () => {
   console.log(`Server ${port} portunda çalışıyor`);
 }); 
