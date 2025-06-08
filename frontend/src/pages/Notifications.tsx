@@ -136,7 +136,7 @@ const Notifications: React.FC = () => {
             sx={{ 
               mb: 2,
               fontWeight: 700,
-              background: 'linear-gradient(45deg, #FF6B6B 30%, #FF8E53 90%)',
+              background: 'linear-gradient(45deg, #FF0000 30%, #171717 90%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent'
             }}
@@ -153,8 +153,10 @@ const Notifications: React.FC = () => {
               variant={filter === 'all' ? 'filled' : 'outlined'}
               sx={{ 
                 borderRadius: 2,
+                background: filter === 'all' ? 'rgba(255,0,0,0.1)' : undefined,
+                color: filter === 'all' ? '#FF0000' : undefined,
                 '&:hover': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.1)
+                  backgroundColor: 'rgba(255,0,0,0.1)'
                 }
               }}
             />
@@ -166,8 +168,10 @@ const Notifications: React.FC = () => {
               variant={filter === 'unread' ? 'filled' : 'outlined'}
               sx={{ 
                 borderRadius: 2,
+                background: filter === 'unread' ? 'rgba(255,0,0,0.1)' : undefined,
+                color: filter === 'unread' ? '#FF0000' : undefined,
                 '&:hover': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.1)
+                  backgroundColor: 'rgba(255,0,0,0.1)'
                 }
               }}
             />

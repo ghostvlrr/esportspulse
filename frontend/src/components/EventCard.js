@@ -13,12 +13,12 @@ const EventCard = ({ event }) => {
             display: 'flex',
             flexDirection: 'column',
             transition: 'all 0.3s ease',
-            background: 'linear-gradient(145deg, #2D1B69 0%, #1A1B2E 100%)',
-            border: '1px solid rgba(0, 245, 255, 0.1)',
+            background: 'linear-gradient(145deg, #171717 0%, #0A0A0A 100%)',
+            border: '1px solid rgba(255, 0, 0, 0.15)',
             '&:hover': {
                 transform: 'translateY(-4px)',
-                boxShadow: '0px 8px 24px rgba(0, 245, 255, 0.2)',
-                border: '1px solid rgba(0, 245, 255, 0.3)',
+                boxShadow: '0px 8px 24px rgba(255, 0, 0, 0.2)',
+                border: '1px solid rgba(255, 0, 0, 0.3)',
             }
         }}>
             <CardMedia
@@ -29,8 +29,8 @@ const EventCard = ({ event }) => {
                 sx={{
                     objectFit: 'contain',
                     padding: '1rem',
-                    backgroundColor: 'rgba(45, 27, 105, 0.3)',
-                    borderBottom: '1px solid rgba(0, 245, 255, 0.1)',
+                    backgroundColor: 'rgba(23, 23, 23, 0.3)',
+                    borderBottom: '1px solid rgba(255, 0, 0, 0.1)',
                 }}
                 onError={(e) => {
                     console.log('Logo yüklenirken hata:', e);

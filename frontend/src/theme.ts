@@ -4,10 +4,10 @@ const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#00F5FF',
+      main: '#FF0000',
     },
     secondary: {
-      main: '#FF00F5',
+      main: '#171717',
     },
     background: {
       default: '#0A0A0A',
@@ -18,16 +18,16 @@ const theme = createTheme({
       secondary: 'rgba(255, 255, 255, 0.7)',
     },
     error: {
-      main: '#e53935',
+      main: '#FF4444',
     },
     warning: {
-      main: '#ff9800',
+      main: '#FF0000',
     },
     info: {
-      main: '#2196f3',
+      main: '#FF0000',
     },
     success: {
-      main: '#4caf50',
+      main: '#FF0000',
     },
   },
   typography: {
@@ -64,6 +64,11 @@ const theme = createTheme({
           borderRadius: 8,
           textTransform: 'none',
           fontWeight: 500,
+          background: 'linear-gradient(45deg, #FF0000 30%, #171717 90%)',
+          color: '#fff',
+          '&:hover': {
+            background: 'linear-gradient(45deg, #CC0000 30%, #171717 90%)',
+          },
         },
       },
     },
@@ -72,6 +77,7 @@ const theme = createTheme({
         root: {
           borderRadius: 12,
           backgroundColor: '#171717',
+          border: '1px solid rgba(255,0,0,0.15)',
         },
       },
     },
@@ -94,7 +100,7 @@ const theme = createTheme({
         root: {
           borderRadius: 8,
           '&:hover': {
-            backgroundColor: 'rgba(0, 245, 255, 0.1)',
+            backgroundColor: 'rgba(255,0,0,0.1)',
           },
         },
       },
@@ -103,6 +109,8 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 8,
+          background: 'rgba(255,0,0,0.1)',
+          color: '#FF0000',
         },
       },
     },
@@ -111,6 +119,7 @@ const theme = createTheme({
         root: {
           '& .MuiOutlinedInput-root': {
             borderRadius: 8,
+            borderColor: '#FF0000',
           },
         },
       },

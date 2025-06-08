@@ -21,7 +21,6 @@ import Matches from './pages/Matches';
 import Teams from './pages/Teams';
 import News from './pages/News';
 import Favorites from './pages/Favorites';
-import Stats from './pages/Stats';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
 import Notifications from './pages/Notifications';
@@ -76,7 +75,6 @@ function App() {
               <Route path="/teams" element={<Teams />} />
               <Route path="/news" element={<News />} />
               <Route path="/favorites" element={<Favorites />} />
-              <Route path="/stats" element={<Stats />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="*" element={<NotFound />} />

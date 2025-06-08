@@ -20,7 +20,7 @@
   font-size: 24px;
   font-weight: 600;
   color: #FFFFFF;
-  text-shadow: 0 0 10px rgba(0, 245, 255, 0.3);
+  text-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
 }
 
 .notifications-filters {
@@ -32,18 +32,18 @@
   padding: 8px 16px;
   border: none;
   border-radius: 8px;
-  background: rgba(0, 245, 255, 0.1);
+  background: rgba(255, 0, 0, 0.1);
   color: #FFFFFF;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .filter-button:hover {
-  background: rgba(0, 245, 255, 0.2);
+  background: rgba(255, 0, 0, 0.2);
 }
 
 .filter-button.active {
-  background: linear-gradient(45deg, #00F5FF 30%, #FF00F5 90%);
+  background: linear-gradient(45deg, #FF0000 30%, #171717 90%);
 }
 
 .notifications-list {
@@ -62,13 +62,13 @@
 
 .notification-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 245, 255, 0.2);
-  border-color: #00F5FF;
+  box-shadow: 0 4px 12px rgba(255, 0, 0, 0.2);
+  border-color: #FF0000;
 }
 
 .notification-item.unread {
-  border-left: 4px solid #00F5FF;
-  background: rgba(0, 245, 255, 0.05);
+  border-left: 4px solid #FF0000;
+  background: rgba(255, 0, 0, 0.05);
 }
 
 .notification-header {
@@ -105,7 +105,7 @@
   padding: 6px 12px;
   border: none;
   border-radius: 6px;
-  background: rgba(0, 245, 255, 0.1);
+  background: rgba(255, 0, 0, 0.1);
   color: #FFFFFF;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -113,15 +113,15 @@
 }
 
 .notification-actions button:hover {
-  background: rgba(0, 245, 255, 0.2);
+  background: rgba(255, 0, 0, 0.2);
 }
 
 .notification-actions button.delete {
-  background: rgba(229, 57, 53, 0.1);
+  background: rgba(255, 68, 68, 0.1);
 }
 
 .notification-actions button.delete:hover {
-  background: rgba(229, 57, 53, 0.2);
+  background: rgba(255, 68, 68, 0.2);
 }
 
 .no-notifications {
@@ -141,12 +141,12 @@
 .no-notifications-title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #f3f6fa;
+  color: #FFFFFF;
   margin-bottom: 0.5rem;
 }
 
 .no-notifications-message {
-  color: #b0b8d1;
+  color: #FF0000;
   line-height: 1.6;
 }
 

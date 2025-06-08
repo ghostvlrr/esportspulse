@@ -95,8 +95,8 @@ const filterLabels: Record<FilterType, string> = {
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   '&.MuiTableCell-head': {
-    backgroundColor: alpha(theme.palette.primary.main, 0.1),
-    color: theme.palette.primary.main,
+    backgroundColor: 'rgba(255,0,0,0.1)',
+    color: '#FF0000',
     fontWeight: 600,
   },
   '&.MuiTableCell-body': {
@@ -121,7 +121,7 @@ const FilterButton = styled(Button, {
     : alpha(theme.palette.primary.main, 0.1),
   color: active 
     ? theme.palette.primary.contrastText 
-    : theme.palette.primary.main,
+    : '#fff',
   '&:hover': {
     backgroundColor: active 
       ? theme.palette.primary.dark 
@@ -142,13 +142,13 @@ const StatusChip = styled(Chip, {
   shouldForwardProp: (prop) => prop !== 'status',
 })<StatusChipProps>(({ theme, status }) => ({
   backgroundColor: 
-    status === 'live' ? alpha(theme.palette.success.main, 0.1) :
-    status === 'completed' ? alpha(theme.palette.info.main, 0.1) :
-    alpha(theme.palette.warning.main, 0.1),
+    status === 'live' ? 'rgba(255,0,0,0.1)' :
+    status === 'completed' ? 'rgba(255,255,255,0.1)' :
+    'rgba(23,23,23,0.1)',
   color: 
-    status === 'live' ? theme.palette.success.main :
-    status === 'completed' ? theme.palette.info.main :
-    theme.palette.warning.main,
+    status === 'live' ? '#FF0000' :
+    status === 'completed' ? '#FFFFFF' :
+    '#FFFFFF',
   fontWeight: 600,
   '& .MuiChip-label': {
     padding: '0 12px',
@@ -157,17 +157,17 @@ const StatusChip = styled(Chip, {
 
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
   borderRadius: theme.shape.borderRadius,
-  backgroundColor: alpha(theme.palette.background.paper, 0.05),
+  backgroundColor: 'rgba(23,23,23,0.05)',
   backdropFilter: 'blur(10px)',
   transition: 'all 0.3s ease',
   '&:hover': {
-    backgroundColor: alpha(theme.palette.background.paper, 0.08),
+    backgroundColor: 'rgba(23,23,23,0.08)',
   },
 }));
 
 const AnimatedTableRow = styled(TableRow)(({ theme }) => ({
   '&:hover': {
-    backgroundColor: alpha(theme.palette.primary.main, 0.05),
+    backgroundColor: 'rgba(255,0,0,0.05)',
   },
 }));
 
@@ -569,17 +569,18 @@ const Matches: React.FC = () => {
 
   const toggleFavorite = useCallback((match: Match) => {
     try {
-    const id = `${match.team1}-${match.team2}-${match.match_event || match.tournament_name}`;
-    let favs = [...favorites];
-    if (favs.includes(id)) {
-      favs = favs.filter(f => f !== id);
+      const id = `${match.team1}-${match.team2}-${match.match_event || match.tournament_name}`;
+      let favs = [...favorites];
+      if (favs.includes(id)) {
+        favs = favs.filter(f => f !== id);
         toast.success('Maç favorilerden çıkarıldı');
-    } else {
-      favs.push(id);
+      } else {
+        favs.push(id);
         toast.success('Maç favorilere eklendi');
-    }
-    setFavorites(favs);
-    localStorage.setItem('favorites', JSON.stringify(favs));
+      }
+      setFavorites(favs);
+      localStorage.setItem('favorites', JSON.stringify(favs));
+      window.dispatchEvent(new Event('favoritesChanged'));
     } catch (error) {
       toast.error('Favori işlemi sırasında bir hata oluştu');
     }
@@ -650,6 +651,20 @@ const Matches: React.FC = () => {
     return <NotificationsActiveIcon color="success" />;
   };
 
+  useEffect(() => {
+    // Tamamlanan maçları favorilerden otomatik çıkar
+    if (!matches || !favorites) return;
+    const completedIds = matches
+      .filter(match => match.time_completed)
+      .map(match => `${match.team1}-${match.team2}-${match.match_event || match.tournament_name}`);
+    const newFavorites = favorites.filter(fav => !completedIds.includes(fav));
+    if (newFavorites.length !== favorites.length) {
+      setFavorites(newFavorites);
+      localStorage.setItem('favorites', JSON.stringify(newFavorites));
+      window.dispatchEvent(new Event('favoritesChanged'));
+    }
+  }, [matches, favorites]);
+
   return (
     <Container maxWidth="xl" sx={{ py: 4 }} role="main" aria-label="Maç Listesi">
       <Box sx={{ mb: 4 }}>
@@ -666,23 +681,32 @@ const Matches: React.FC = () => {
                   type="date"
                   value={selectedRawDate}
                   onChange={e => setSelectedRawDate(e.target.value)}
+                  min={(() => {
+                    const d = new Date();
+                    d.setDate(d.getDate() - 7);
+                    return d.toISOString().split('T')[0];
+                  })()}
+                  max={(() => {
+                    const d = new Date();
+                    return d.toISOString().split('T')[0];
+                  })()}
                   style={{
                     height: 44,
                     fontSize: 16,
                     borderRadius: 10,
-                    border: '2px solid #00f5ff',
-                    background: 'rgba(10, 20, 40, 0.95)',
+                    border: '2px solid #FF0000',
+                    background: 'rgba(23, 23, 23, 0.95)',
                     color: '#fff',
                     padding: '0 16px',
                     minWidth: 220,
                     outline: 'none',
-                    boxShadow: '0 2px 12px rgba(0,245,255,0.10)',
+                    boxShadow: '0 2px 12px rgba(255,0,0,0.10)',
                     transition: 'border 0.2s, box-shadow 0.2s',
                     fontWeight: 500,
                     letterSpacing: 1,
                   }}
-                  onFocus={e => e.currentTarget.style.border = '2px solid #00bcd4'}
-                  onBlur={e => e.currentTarget.style.border = '2px solid #00f5ff'}
+                  onFocus={e => e.currentTarget.style.border = '2px solid #CC0000'}
+                  onBlur={e => e.currentTarget.style.border = '2px solid #FF0000'}
                 />
               )}
               {filter === 'past' && (
