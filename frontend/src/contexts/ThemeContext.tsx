@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { THEME_PALETTES } from '../theme';
 import { getMuiTheme } from '../theme';
 
 interface ThemeContextType {

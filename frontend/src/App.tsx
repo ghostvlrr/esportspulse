@@ -16,7 +16,6 @@ import io from 'socket.io-client';
 import { SOCKET_URL } from './config';
 
 import ErrorBoundary from './components/ErrorBoundary';
-import { getMuiTheme } from './theme';
 import { useTheme } from './contexts/ThemeContext';
 
 import Matches from './pages/Matches';
