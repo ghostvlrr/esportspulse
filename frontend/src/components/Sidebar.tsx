@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../store';
 import { logout } from '../store/slices/authSlice';
-import { Menu as MenuIcon, Close as CloseIcon } from '@mui/icons-material';
+import { Menu as MenuIcon, Close as CloseIcon, Home as HomeIcon, Groups as GroupsIcon, Newspaper as NewspaperIcon, Notifications as NotificationsIcon, Person as PersonIcon, Logout as LogoutIcon } from '@mui/icons-material';
 import '../styles/Sidebar.css';
+import ThemeSelector from './ThemeSelector';
 
 interface FavoriteMatch {
   id: string;
@@ -77,40 +78,61 @@ const Sidebar: React.FC = () => {
     setIsOpen(false);
   };
 
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    if (dropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [dropdownOpen]);
+
+  const handleThemeChange = (key: string) => {
+    setDropdownOpen(false);
+  };
+
   return (
     <>
       <button className="hamburger-menu" onClick={toggleSidebar}>
         {isOpen ? <CloseIcon /> : <MenuIcon />}
       </button>
 
-      <div className={`sidebar ${isOpen ? 'open' : ''}`}>
+      <div className={`sidebar ${isOpen ? 'open' : ''}`} style={{ background: getComputedStyle(document.body).getPropertyValue('--color-sidebar'), transition: 'background 0.6s cubic-bezier(0.4,0,0.2,1)' }}>
         <div className="logo">
           <h1>EsportsPulse</h1>
         </div>
 
         <nav>
           <Link to="/" className={location.pathname === '/' ? 'active' : ''} onClick={() => setIsOpen(false)}>
-            Ana Sayfa
+            <HomeIcon sx={{ mr: 1 }} /> Ana Sayfa
           </Link>
           {/* <Link to="/matches" className={location.pathname === '/matches' ? 'active' : ''} onClick={() => setIsOpen(false)}>
             Maçlar
           </Link> */}
           <Link to="/teams" className={location.pathname === '/teams' ? 'active' : ''} onClick={() => setIsOpen(false)}>
-            Takımlar
+            <GroupsIcon sx={{ mr: 1 }} /> Takımlar
           </Link>
           <Link to="/news" className={location.pathname === '/news' ? 'active' : ''} onClick={() => setIsOpen(false)}>
-            Haberler
+            <NewspaperIcon sx={{ mr: 1 }} /> Haberler
           </Link>
           <Link to="/notifications" className={location.pathname === '/notifications' ? 'active' : ''} onClick={() => setIsOpen(false)}>
-            Bildirimler
+            <NotificationsIcon sx={{ mr: 1 }} /> Bildirimler
           </Link>
           {user ? (
             <>
               <Link to="/profile" className={location.pathname === '/profile' ? 'active' : ''} onClick={() => setIsOpen(false)}>
-                Profil
+                <PersonIcon sx={{ mr: 1 }} /> Profil
               </Link>
               <button onClick={handleLogout} className="logout-btn">
-                Çıkış Yap
+                <LogoutIcon sx={{ mr: 1 }} /> Çıkış Yap
               </button>
             </>
           ) : null}
@@ -136,6 +158,9 @@ const Sidebar: React.FC = () => {
               ))
             )}
           </div>
+        </div>
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '24px 0 12px 0', padding: '0 0 0 0' }}>
+          <ThemeSelector />
         </div>
         <div className="footer">
           © 2025 ESPORTS PULSE
