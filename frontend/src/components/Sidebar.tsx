@@ -95,10 +95,6 @@ const Sidebar: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [dropdownOpen]);
 
-  const handleThemeChange = (key: string) => {
-    setDropdownOpen(false);
-  };
-
   return (
     <>
       <button className="hamburger-menu" onClick={toggleSidebar}>
