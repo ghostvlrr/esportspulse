@@ -1,17 +1,17 @@
 .sidebar {
   width: 280px;
-  background: linear-gradient(180deg, #171717 0%, #0A0A0A 100%);
-  padding: 2rem;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background-color: var(--color-sidebar);
+  color: var(--color-text);
+  padding: 2rem 1rem;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid rgba(255, 0, 0, 0.15);
-  position: fixed;
-  height: 100vh;
-  overflow-y: auto;
-  box-shadow: 4px 0 15px rgba(255, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
-  z-index: 2000;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  border-right: 1px solid var(--color-border);
 }
 
 .hamburger-menu {
@@ -116,26 +116,26 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(45deg, rgba(255, 0, 0, 0.1), transparent);
+  background: linear-gradient(45deg, var(--color-primary), transparent);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
 .sidebar nav a:hover::before {
-  opacity: 1;
+  opacity: 0.1;
 }
 
 .sidebar nav a:hover {
-  background-color: rgba(255, 0, 0, 0.15);
+  background-color: var(--color-primary);
   color: #FFFFFF;
   transform: translateX(5px) scale(1.02);
-  box-shadow: 0 4px 12px rgba(255, 0, 0, 0.2);
+  box-shadow: 0 4px 12px var(--color-primary);
 }
 
 .sidebar nav a.active {
-  background: linear-gradient(45deg, #FF0000, #CC0000);
+  background: linear-gradient(45deg, var(--color-primary), var(--color-secondary));
   color: #FFFFFF;
-  box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
+  box-shadow: 0 4px 15px var(--color-primary);
   font-weight: 600;
   transform: translateX(5px);
 }
@@ -155,9 +155,51 @@
 }
 
 .logout-btn:hover {
-  background-color: rgba(255, 0, 0, 0.15);
+  background-color: var(--color-primary);
   color: #FFFFFF;
   transform: translateX(5px);
+}
+
+.favorites-header {
+  color: var(--color-text);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1.5rem 0 1rem;
+  padding: 0 1rem;
+}
+
+.favorite-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0 0.5rem;
+}
+
+.favorite-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.favorite-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(5px);
+}
+
+.favorite-item .vs {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.no-favorites {
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: 1rem;
+  font-style: italic;
 }
 
 /* Responsive tasarım */
