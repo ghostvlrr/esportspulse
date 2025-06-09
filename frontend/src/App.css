@@ -11,6 +11,97 @@
   --color-border: rgba(255, 0, 0, 0.15);
 }
 
+body[data-theme='default'] {
+  --color-bg: #0A0A0A;
+  --color-sidebar: #171717;
+  --color-card: #171717;
+  --color-primary: #FF0000;
+  --color-secondary: #171717;
+  --color-text: #FFFFFF;
+  --color-text-secondary: rgba(255, 255, 255, 0.7);
+  --color-success: #FF0000;
+  --color-danger: #FF4444;
+  --color-border: rgba(255, 0, 0, 0.15);
+}
+
+body[data-theme='space'] {
+  --color-bg: #0A0A1A;
+  --color-sidebar: #0A2233;
+  --color-card: #112244;
+  --color-primary: #00F5FF;
+  --color-secondary: #0A2233;
+  --color-text: #FFFFFF;
+  --color-text-secondary: rgba(200, 255, 255, 0.7);
+  --color-success: #00F5FF;
+  --color-danger: #FF4444;
+  --color-border: rgba(0, 245, 255, 0.15);
+}
+
+body[data-theme='sunset'] {
+  --color-bg: #1A0A0A;
+  --color-sidebar: #331A0A;
+  --color-card: #442211;
+  --color-primary: #FF6B6B;
+  --color-secondary: #FFD93D;
+  --color-text: #FFFFFF;
+  --color-text-secondary: rgba(255, 230, 200, 0.7);
+  --color-success: #FFD93D;
+  --color-danger: #FF6B6B;
+  --color-border: rgba(255, 107, 107, 0.15);
+}
+
+body[data-theme='neon'] {
+  --color-bg: #0A0A0A;
+  --color-sidebar: #0A0A0A;
+  --color-card: #0A0A0A;
+  --color-primary: #00FF00;
+  --color-secondary: #171717;
+  --color-text: #FFFFFF;
+  --color-text-secondary: rgba(200, 255, 200, 0.7);
+  --color-success: #00FF00;
+  --color-danger: #FF4444;
+  --color-border: rgba(0, 255, 0, 0.15);
+}
+
+body[data-theme='ocean'] {
+  --color-bg: #0A1A1A;
+  --color-sidebar: #112244;
+  --color-card: #112244;
+  --color-primary: #64FFDA;
+  --color-secondary: #00B4D8;
+  --color-text: #FFFFFF;
+  --color-text-secondary: rgba(100, 255, 218, 0.7);
+  --color-success: #64FFDA;
+  --color-danger: #FF4444;
+  --color-border: rgba(100, 255, 218, 0.15);
+}
+
+body[data-theme='purple'] {
+  --color-bg: #1A1A1A;
+  --color-sidebar: #2A2A2A;
+  --color-card: #2A2A2A;
+  --color-primary: #a18cd1;
+  --color-secondary: #fbc2eb;
+  --color-text: #FFFFFF;
+  --color-text-secondary: rgba(255, 255, 255, 0.7);
+  --color-success: #a18cd1;
+  --color-danger: #FF4444;
+  --color-border: rgba(161, 140, 209, 0.15);
+}
+
+body[data-theme='gold'] {
+  --color-bg: #232526;
+  --color-sidebar: #2A2A2A;
+  --color-card: #2A2A2A;
+  --color-primary: #FFD700;
+  --color-secondary: #232526;
+  --color-text: #FFFFFF;
+  --color-text-secondary: rgba(255, 255, 255, 0.7);
+  --color-success: #FFD700;
+  --color-danger: #FF4444;
+  --color-border: rgba(255, 215, 0, 0.15);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -22,6 +113,7 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text);
   line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .app {
@@ -677,5 +769,39 @@ body {
   .main-content, .content {
     padding: 4px !important;
   }
+}
+
+/* Tema önizleme butonları */
+.theme-preview {
+  border: 1.5px solid #fff3;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  margin: 4px;
+  outline: none;
+  cursor: pointer;
+  box-shadow: none;
+  transition: all 0.2s;
+  display: inline-block;
+}
+.theme-preview.active {
+  border: 2px solid #FF0000;
+  box-shadow: 0 0 8px #FF0000;
+}
+.default-theme {
+  background: linear-gradient(145deg, #0A0A0A 0%, #171717 100%);
+}
+.space-theme {
+  background: radial-gradient(circle at center, #00F5FF 0%, #0A2233 100%);
+}
+.sunset-theme {
+  background: linear-gradient(45deg, #FF6B6B 0%, #FFD93D 100%);
+}
+.neon-theme {
+  background: #0A0A0A;
+  box-shadow: 0 0 5px #00FF00, 0 0 10px #00FF00;
+}
+.ocean-theme {
+  background: linear-gradient(45deg, #64FFDA 0%, #00B4D8 100%);
 }
 
