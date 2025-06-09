@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './ThemeSelector.css';
+import { useTheme } from '../contexts/ThemeContext';
 
 const THEMES = [
   {
@@ -41,22 +42,25 @@ const THEMES = [
 
 const ThemeSelector: React.FC = () => {
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState(localStorage.getItem('theme') || 'default');
+  const { themeKey, changeTheme } = useTheme();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
     }
-    if (open) document.addEventListener('mousedown', handleClick);
+    if (open) {
+      document.addEventListener('mousedown', handleClick);
+    }
     return () => document.removeEventListener('mousedown', handleClick);
   }, [open]);
 
-  useEffect(() => {
-    document.body.setAttribute('data-theme', selected);
-    localStorage.setItem('theme', selected);
-    window.dispatchEvent(new Event('themeChanged'));
-  }, [selected]);
+  const handleThemeChange = (themeKey: string) => {
+    changeTheme(themeKey);
+    setOpen(false);
+  };
 
   return (
     <div className="theme-selector-root" ref={ref}>
@@ -66,36 +70,32 @@ const ThemeSelector: React.FC = () => {
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label="Tema seçici"
-        type="button"
       >
-        <span className="theme-selector-preview" style={{ background: THEMES.find(t => t.key === selected)?.gradient }} />
-        <span className="theme-selector-label">Tema</span>
-        <svg className={`theme-selector-arrow${open ? ' open' : ''}`} width="20" height="20" viewBox="0 0 20 20">
-          <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round"/>
-        </svg>
+        <div
+          className="theme-selector-preview"
+          style={{ background: THEMES.find(t => t.key === themeKey)?.gradient }}
+        />
+        <span className="theme-selector-label">
+          {THEMES.find(t => t.key === themeKey)?.name}
+        </span>
+        <span className={`theme-selector-arrow ${open ? 'open' : ''}`}>
+          ▼
+        </span>
       </button>
+
       {open && (
-        <div className="theme-selector-dropdown">
+        <div className="theme-selector-dropdown" role="listbox">
           <div className="theme-selector-grid">
             {THEMES.map((theme) => (
               <button
                 key={theme.key}
-                className={`theme-selector-item${selected === theme.key ? ' selected' : ''}`}
-                onClick={() => { setSelected(theme.key); setOpen(false); }}
-                type="button"
-                aria-label={theme.name}
-                tabIndex={0}
-              >
-                <span className="theme-selector-dot" style={{ background: theme.gradient }} />
-                {selected === theme.key && (
-                  <span className="theme-selector-check">
-                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                      <path d="M5 11l4 4 6-8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </span>
-                )}
-                <span className="theme-selector-name">{theme.name}</span>
-              </button>
+                className="theme-selector-item"
+                onClick={() => handleThemeChange(theme.key)}
+                role="option"
+                aria-selected={themeKey === theme.key}
+                style={{ background: theme.gradient }}
+                title={theme.name}
+              />
             ))}
           </div>
         </div>

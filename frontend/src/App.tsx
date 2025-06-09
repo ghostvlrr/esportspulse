@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider } from '@mui/material/styles';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -12,10 +13,11 @@ import './i18n';
 import './App.css';
 import axios from 'axios';
 import io from 'socket.io-client';
+import { SOCKET_URL } from './config';
 
 import ErrorBoundary from './components/ErrorBoundary';
-import theme from './theme';
-import { SOCKET_URL } from './services/api';
+import { getMuiTheme } from './theme';
+import { useTheme } from './contexts/ThemeContext';
 
 import Matches from './pages/Matches';
 import Teams from './pages/Teams';
@@ -31,16 +33,15 @@ import { Provider } from 'react-redux';
 import { store } from './store';
 import Sidebar from './components/Sidebar';
 
-function App() {
+function AppContent() {
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
+  const { muiTheme } = useTheme();
 
   useEffect(() => {
-    // Bildirimleri yükle
     const fetchNotifications = async () => {
       try {
         await axios.get(`${process.env.REACT_APP_API_BASE_URL}/notifications`);
-        // dispatch(setNotifications(response.data));
       } catch (error) {
         console.error('Bildirimler yüklenirken hata:', error);
       }
@@ -65,25 +66,36 @@ function App() {
   }, [user, dispatch]);
 
   return (
-    <ErrorBoundary>
-      <div className="app">
-        <Sidebar />
-        <main className="main-content">
-          <div className="content">
-            <Routes>
-              <Route path="/" element={<Matches />} />
-              <Route path="/teams" element={<Teams />} />
-              <Route path="/news" element={<News />} />
-              <Route path="/favorites" element={<Favorites />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/notifications" element={<Notifications />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
-        </main>
-      </div>
-      <ToastContainer position="bottom-right" />
-    </ErrorBoundary>
+    <MuiThemeProvider theme={muiTheme}>
+      <ErrorBoundary>
+        <CssBaseline />
+        <Router>
+          <Sidebar />
+          <main className="main-content">
+            <div className="content">
+              <Routes>
+                <Route path="/" element={<Matches />} />
+                <Route path="/teams" element={<Teams />} />
+                <Route path="/news" element={<News />} />
+                <Route path="/favorites" element={<Favorites />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/notifications" element={<Notifications />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
+          </main>
+        </Router>
+        <ToastContainer position="bottom-right" />
+      </ErrorBoundary>
+    </MuiThemeProvider>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }
 
@@ -92,12 +104,7 @@ function AppWrapper() {
     <Provider store={store}>
       <HelmetProvider>
         <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={tr}>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <Router>
-              <App />
-            </Router>
-          </ThemeProvider>
+          <App />
         </LocalizationProvider>
       </HelmetProvider>
     </Provider>
