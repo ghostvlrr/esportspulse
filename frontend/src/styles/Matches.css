@@ -1,3 +1,68 @@
+/* Tema değişkenleri */
+:root {
+  --color-primary: #FF0000;
+  --color-background: #0A0A0A;
+  --color-surface: #171717;
+  --color-text: #FFFFFF;
+  --color-text-secondary: rgba(255, 255, 255, 0.7);
+  --color-border: rgba(255, 0, 0, 0.15);
+}
+
+/* Tema değişiklikleri */
+[data-theme="space"] {
+  --color-primary: #00F5FF;
+  --color-background: #0A0A1A;
+  --color-surface: #112244;
+  --color-text: #FFFFFF;
+  --color-text-secondary: rgba(200, 255, 255, 0.7);
+  --color-border: rgba(0, 245, 255, 0.15);
+}
+
+[data-theme="sunset"] {
+  --color-primary: #FF6B6B;
+  --color-background: #1A0A0A;
+  --color-surface: #442211;
+  --color-text: #FFFFFF;
+  --color-text-secondary: rgba(255, 230, 200, 0.7);
+  --color-border: rgba(255, 107, 107, 0.15);
+}
+
+[data-theme="neon"] {
+  --color-primary: #00FF00;
+  --color-background: #0A0A0A;
+  --color-surface: #0A0A0A;
+  --color-text: #FFFFFF;
+  --color-text-secondary: rgba(200, 255, 200, 0.7);
+  --color-border: rgba(0, 255, 0, 0.15);
+}
+
+[data-theme="ocean"] {
+  --color-primary: #64FFDA;
+  --color-background: #0A1A1A;
+  --color-surface: #112244;
+  --color-text: #FFFFFF;
+  --color-text-secondary: rgba(100, 255, 218, 0.7);
+  --color-border: rgba(100, 255, 218, 0.15);
+}
+
+[data-theme="purple"] {
+  --color-primary: #a18cd1;
+  --color-background: #1A1A1A;
+  --color-surface: #2A2A2A;
+  --color-text: #FFFFFF;
+  --color-text-secondary: rgba(255, 255, 255, 0.7);
+  --color-border: rgba(161, 140, 209, 0.15);
+}
+
+[data-theme="gold"] {
+  --color-primary: #FFD700;
+  --color-background: #232526;
+  --color-surface: #2A2A2A;
+  --color-text: #FFFFFF;
+  --color-text-secondary: rgba(255, 255, 255, 0.7);
+  --color-border: rgba(255, 215, 0, 0.15);
+}
+
 .matches-container {
   max-width: 1200px;
   margin: 0 auto;

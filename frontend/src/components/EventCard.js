@@ -2,9 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardMedia, Typography, Box } from '@mui/material';
 
 const EventCard = ({ event }) => {
-    console.log('EventCard event:', event);
     const logoPath = event.logo ? `/events/processed/${event.logo}` : '/events/default-tournament-logo.png';
-    console.log('EventCard logo yolu:', logoPath);
 
     return (
         <Card sx={{ 
@@ -33,7 +31,6 @@ const EventCard = ({ event }) => {
                     borderBottom: '1px solid rgba(255, 0, 0, 0.1)',
                 }}
                 onError={(e) => {
-                    console.log('Logo yüklenirken hata:', e);
                     e.target.onerror = null;
                     e.target.src = '/events/default-tournament-logo.png';
                 }}

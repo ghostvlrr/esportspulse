@@ -3,7 +3,17 @@ import { Link, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../store';
 import { logout } from '../store/slices/authSlice';
-import { Menu as MenuIcon, Close as CloseIcon, Home as HomeIcon, Groups as GroupsIcon, Newspaper as NewspaperIcon, Notifications as NotificationsIcon, Person as PersonIcon, Logout as LogoutIcon } from '@mui/icons-material';
+import { 
+  Menu as MenuIcon, 
+  Close as CloseIcon, 
+  Home as HomeIcon, 
+  Groups as GroupsIcon, 
+  Newspaper as NewspaperIcon, 
+  Notifications as NotificationsIcon, 
+  Person as PersonIcon, 
+  Logout as LogoutIcon,
+  EmojiEvents as EventsIcon 
+} from '@mui/icons-material';
 import '../styles/Sidebar.css';
 import ThemeSelector from './ThemeSelector';
 
@@ -115,6 +125,9 @@ const Sidebar: React.FC = () => {
           </Link> */}
           <Link to="/teams" className={location.pathname === '/teams' ? 'active' : ''} onClick={() => setIsOpen(false)}>
             <GroupsIcon sx={{ mr: 1 }} /> Takımlar
+          </Link>
+          <Link to="/events" className={location.pathname === '/events' ? 'active' : ''} onClick={() => setIsOpen(false)}>
+            <EventsIcon sx={{ mr: 1 }} /> Turnuvalar
           </Link>
           <Link to="/news" className={location.pathname === '/news' ? 'active' : ''} onClick={() => setIsOpen(false)}>
             <NewspaperIcon sx={{ mr: 1 }} /> Haberler

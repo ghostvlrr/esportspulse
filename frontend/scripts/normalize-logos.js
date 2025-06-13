@@ -15,7 +15,7 @@ function normalize(str) {
 }
 
 // Logoların bulunduğu klasörün yolunu ayarla
-const logosDir = path.resolve(__dirname, '../public/logos');
+const logosDir = path.resolve(__dirname, '../public/events/processed');
 
 fs.readdirSync(logosDir).forEach(file => {
   const ext = path.extname(file).toLowerCase();

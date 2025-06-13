@@ -45,6 +45,8 @@ import { tr } from 'date-fns/locale';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import '../styles/Matches.css';
+import { useNotifications } from '../hooks/useNotifications';
+import { api } from '../services/api';
 
 interface NotificationSettings {
   enabled: boolean;
@@ -242,7 +244,6 @@ const normalize = (str: string) =>
     .replace(/[^a-z0-9]/g, '');
 
 const normalizeName = (str: string) => {
-  console.log('Normalize edilecek isim:', str);
   const normalized = str
     .toLowerCase()
     .replace(/ş/g, 's')
@@ -254,7 +255,6 @@ const normalizeName = (str: string) => {
     .replace(/[^a-z0-9 ]/g, '')
     .replace(/\s+/g, '-')
     .trim();
-  console.log('Normalize edilmiş sonuç:', normalized);
   return normalized;
 };
 
@@ -290,18 +290,11 @@ const showWebNotification = (title: string, options: NotificationOptions) => {
 // Turnuva logosu için url önceliği: http/https ile başlıyorsa onu kullan, yoksa local events, yoksa default
 const getTournamentLogo = (match: Match) => {
   const tName = match.tournament_name || match.match_event || '';
-  console.log('Turnuva adı:', tName);
-  
-  // Esports World Cup 2025 için özel logo
-  if (normalizeName(tName) === 'esports world cup 2025') {
-    return 'https://owcdn.net/img/6814dc624bb4c.png';
-  }
-  
-  // Normalize edilmiş turnuva adı ile local events/processed dizininden logo çek
-  const normalizedName = normalizeName(tName);
-  console.log('Normalize edilmiş isim:', normalizedName);
+  const normalizedName = normalize(tName);
   const logoPath = `/events/processed/${normalizedName}.png`;
-  console.log('Logo yolu:', logoPath);
+  console.log('Turnuva adı:', tName);
+  console.log('Normalize edilmiş:', normalizedName);
+  console.log('Logo path:', logoPath);
   return logoPath;
 };
 
@@ -325,6 +318,7 @@ const Matches: React.FC = () => {
     scoreUpdate: true,
   });
   const [selectedRawDate, setSelectedRawDate] = useState<string>('');
+  const { notifications, setNotifications } = useNotifications();
 
   // Bildirim sayısını güncelle
   const updateNotificationCount = useCallback(() => {
@@ -538,34 +532,52 @@ const Matches: React.FC = () => {
     return '-';
   }, []);
 
+  // Filtreleme işlemlerini memoize et
   const filteredMatches = useMemo(() => {
-    let result = matches;
-    if (filter === 'past') {
-      result = result.filter(match => match.time_completed);
-      if (selectedDate) {
-        const selectedDay = new Date(selectedDate);
-        selectedDay.setHours(0, 0, 0, 0);
-        
-        result = result.filter(match => {
-          if (!match.time_completed) return false;
-          try {
-            const matchDate = match.parsed_date ? new Date(match.parsed_date) : (match.date ? new Date(match.date) : null);
-            if (!matchDate) return false;
-            matchDate.setHours(0, 0, 0, 0);
-            return matchDate.getTime() === selectedDay.getTime();
-          } catch {
-            return false;
-          }
-        });
+    return matches.filter(match => {
+      if (filter === 'live') {
+        return match.status === 'live';
+      } else if (filter === 'upcoming') {
+        return match.status === 'upcoming';
+      } else if (filter === 'past') {
+        return match.status === 'completed';
       }
-      return result;
+      return true;
+    });
+  }, [matches, filter]);
+
+  // Tarih filtresini uygula
+  const dateFilteredMatches = useMemo(() => {
+    if (!selectedDate || filter !== 'past') return filteredMatches;
+    
+    const startOfDay = new Date(selectedDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(selectedDate);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    return filteredMatches.filter(match => {
+      if (!match.time_completed) return false;
+      const matchDate = new Date(match.time_completed);
+      return matchDate >= startOfDay && matchDate <= endOfDay;
+    });
+  }, [filteredMatches, selectedDate, filter]);
+
+  // Okunmamış bildirimleri say
+  const unreadCount = useMemo(() => {
+    return notifications.filter((n: { read: boolean }) => !n.read).length;
+  }, [notifications]);
+
+  // Tüm bildirimleri kapat
+  const closeAllNotifications = useCallback(async () => {
+    try {
+      await api.post('/api/notifications/close-all');
+      setNotifications([]);
+      toast.success('Tüm bildirimler kapatıldı');
+    } catch (error) {
+      toast.error('Bildirimler kapatılırken bir hata oluştu');
     }
-    // Diğer sekmelerde tarih filtreleme yapılmasın
-    if (filter === 'all') return result.filter(match => !match.time_completed);
-    if (filter === 'live') return result.filter(match => match.time_until_match === 'LIVE');
-    if (filter === 'upcoming') return result.filter(match => match.time_until_match && match.time_until_match !== 'LIVE');
-    return result;
-  }, [matches, filter, selectedDate]);
+  }, [setNotifications]);
 
   const toggleFavorite = useCallback((match: Match) => {
     try {
@@ -619,22 +631,6 @@ const Matches: React.FC = () => {
       }
     }
     setNotificationDialogOpen(false);
-  };
-
-  // Tüm bildirimleri kapat fonksiyonu
-  const closeAllNotifications = () => {
-    setMatches(prev => prev.map((m, idx) => {
-      if (m.notifications?.enabled) {
-        const uniqueKey = `${m.id}_${m.team1}_${m.team2}_${m.tournament_name || m.match_event}`;
-        const updatedSettings = {
-          ...m.notifications,
-          enabled: false
-        };
-        localStorage.setItem(`match_notifications_${uniqueKey}`, JSON.stringify(updatedSettings));
-        return { ...m, notifications: updatedSettings };
-      }
-      return m;
-    }));
   };
 
   // Bildirim ikonunu güncelle
@@ -726,7 +722,7 @@ const Matches: React.FC = () => {
                   onClick={closeAllNotifications}
                   sx={{ minWidth: 180 }}
                   startIcon={
-                    <Badge badgeContent={unreadNotifications} color="error">
+                    <Badge badgeContent={unreadCount} color="error">
                       <NotificationsIcon />
                     </Badge>
                   }
@@ -772,315 +768,317 @@ const Matches: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <StyledTableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <StyledTableCell>Favori</StyledTableCell>
-                      <StyledTableCell>Bildirim</StyledTableCell>
-                      <StyledTableCell>Turnuva</StyledTableCell>
-                      <StyledTableCell align="center" sx={{ width: 170 }}>Takım 1</StyledTableCell>
-                      <StyledTableCell align="center" sx={{ width: 60 }}>VS</StyledTableCell>
-                      <StyledTableCell align="center" sx={{ width: 170 }}>Takım 2</StyledTableCell>
-                      <StyledTableCell align="center" sx={{ width: 70 }}>Skor</StyledTableCell>
-                      <StyledTableCell>Durum</StyledTableCell>
-                      <StyledTableCell>Zaman</StyledTableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {filteredMatches.length === 0 ? (
+              <div className="matches-table-scroll">
+                <StyledTableContainer>
+                  <Table>
+                    <TableHead>
                       <TableRow>
-                        <TableCell colSpan={9} align="center">
-                          <Typography variant="body1" color="text.secondary">
-                            Maç bulunamadı
-                          </Typography>
-                        </TableCell>
+                        <StyledTableCell>Favori</StyledTableCell>
+                        <StyledTableCell>Bildirim</StyledTableCell>
+                        <StyledTableCell>Turnuva</StyledTableCell>
+                        <StyledTableCell align="center" sx={{ width: 170 }}>Takım 1</StyledTableCell>
+                        <StyledTableCell align="center" sx={{ width: 60 }}>VS</StyledTableCell>
+                        <StyledTableCell align="center" sx={{ width: 170 }}>Takım 2</StyledTableCell>
+                        <StyledTableCell align="center" sx={{ width: 70 }}>Skor</StyledTableCell>
+                        <StyledTableCell>Durum</StyledTableCell>
+                        <StyledTableCell>Zaman</StyledTableCell>
                       </TableRow>
-                    ) : (
-                      filteredMatches.map((match, index) => (
-                        <AnimatedTableRow key={`${match.id}-${index}`} sx={{ height: 60 }}>
-                          <TableCell align="center" sx={{ verticalAlign: 'middle' }}>
-                            <IconButton
-                              onClick={() => toggleFavorite(match)}
-                              aria-label={favorites.includes(`${match.team1}-${match.team2}-${match.match_event || match.tournament_name}`) 
-                                ? 'Favorilerden çıkar' 
-                                : 'Favorilere ekle'}
-                            >
-                              {favorites.includes(`${match.team1}-${match.team2}-${match.match_event || match.tournament_name}`) 
-                                ? <FavoriteIcon color="error" /> 
-                                : <FavoriteBorderIcon />}
-                            </IconButton>
+                    </TableHead>
+                    <TableBody>
+                      {filteredMatches.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={9} align="center">
+                            <Typography variant="body1" color="text.secondary">
+                              Maç bulunamadı
+                            </Typography>
                           </TableCell>
-                          <TableCell align="center" sx={{ verticalAlign: 'middle' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                              <Tooltip title={match.time_completed ? t('notifications.disabled.completed') : (match.time_until_match === 'LIVE' ? t('notifications.disabled.live') : (match.notifications?.enabled ? t('notifications.edit') : t('notifications.add')))}>
-                                <span>
-                                  <IconButton
-                                    onClick={() => handleNotificationSettings(match, index)}
-                                    aria-label={match.notifications?.enabled ? t('notifications.edit') : t('notifications.add')}
-                                    disabled={Boolean(match.time_completed) || match.time_until_match === 'LIVE'}
-                                  >
-                                    {getNotificationIcon(match)}
-                                  </IconButton>
-                                </span>
-                              </Tooltip>
-                              {match.notifications && match.notifications.enabled && !match.time_completed && match.time_until_match !== 'LIVE' && (
-                                <Tooltip title="Bildirimi kapat">
-                                  <IconButton
-                                    color="error"
-                                    size="small"
-                                    onClick={() => {
-                                      const updatedSettings = {
-                                        enabled: false,
-                                        beforeMatch: typeof match.notifications?.beforeMatch === 'number' ? match.notifications.beforeMatch : 15,
-                                        matchStart: typeof match.notifications?.matchStart === 'boolean' ? match.notifications.matchStart : true,
-                                        matchEnd: typeof match.notifications?.matchEnd === 'boolean' ? match.notifications.matchEnd : true,
-                                        scoreUpdate: typeof match.notifications?.scoreUpdate === 'boolean' ? match.notifications.scoreUpdate : true,
-                                      };
-                                      localStorage.setItem(`match_notifications_${match.id}`, JSON.stringify(updatedSettings));
-                                      setMatches(prev => prev.map((m, idx) => m.id === match.id && idx === index ? { ...m, notifications: updatedSettings } : m));
-                                    }}
-                                  >
-                                    <NotificationsOffIcon fontSize="small" />
-                                  </IconButton>
+                        </TableRow>
+                      ) : (
+                        filteredMatches.map((match, index) => (
+                          <AnimatedTableRow key={`${match.id}-${index}`} sx={{ height: 60 }}>
+                            <TableCell align="center" sx={{ verticalAlign: 'middle' }}>
+                              <IconButton
+                                onClick={() => toggleFavorite(match)}
+                                aria-label={favorites.includes(`${match.team1}-${match.team2}-${match.match_event || match.tournament_name}`) 
+                                  ? 'Favorilerden çıkar' 
+                                  : 'Favorilere ekle'}
+                              >
+                                {favorites.includes(`${match.team1}-${match.team2}-${match.match_event || match.tournament_name}`) 
+                                  ? <FavoriteIcon color="error" /> 
+                                  : <FavoriteBorderIcon />}
+                              </IconButton>
+                            </TableCell>
+                            <TableCell align="center" sx={{ verticalAlign: 'middle' }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                                <Tooltip title={match.time_completed ? t('notifications.disabled.completed') : (match.time_until_match === 'LIVE' ? t('notifications.disabled.live') : (match.notifications?.enabled ? t('notifications.edit') : t('notifications.add')))}>
+                                  <span>
+                                    <IconButton
+                                      onClick={() => handleNotificationSettings(match, index)}
+                                      aria-label={match.notifications?.enabled ? t('notifications.edit') : t('notifications.add')}
+                                      disabled={Boolean(match.time_completed) || match.time_until_match === 'LIVE'}
+                                    >
+                                      {getNotificationIcon(match)}
+                                    </IconButton>
+                                  </span>
                                 </Tooltip>
-                              )}
-                            </Box>
-                          </TableCell>
-                          <TableCell sx={{ verticalAlign: 'middle', minWidth: 200 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
-                              <img
-                                src={getTournamentLogo(match)}
-                                alt={match.tournament_name}
-                                style={{
-                                  width: 36,
-                                  height: 36,
-                                  borderRadius: 8,
-                                  objectFit: 'cover',
-                                  border: '1.5px solid #333',
-                                  background: '#222',
-                                  flexShrink: 0
-                                }}
-                                onError={e => { e.currentTarget.src = '/events/default-tournament-logo.png'; }}
-                              />
-                              <Typography variant="body1" fontWeight={600} sx={{ ml: 1 }}>
-                                {match.tournament_name || match.match_event || '-'}
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                          {/* Takım 1 kutusu */}
-                          <TableCell align="center" sx={{ verticalAlign: 'middle', width: 170 }}>
-                            <Box sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'flex-end',
-                              gap: 1,
-                              background: 'rgba(255,255,255,0.06)',
-                              borderRadius: 2,
-                              px: 1.5,
-                              py: 0.5,
-                              height: 40,
-                              minWidth: 150,
-                              maxWidth: 170,
-                              transition: 'background 0.2s'
-                            }}>
-                              <Box sx={{
-                                width: 40,
-                                height: 40,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                background: '#181c27',
-                                borderRadius: '50%'
-                              }}>
+                                {match.notifications && match.notifications.enabled && !match.time_completed && match.time_until_match !== 'LIVE' && (
+                                  <Tooltip title="Bildirimi kapat">
+                                    <IconButton
+                                      color="error"
+                                      size="small"
+                                      onClick={() => {
+                                        const updatedSettings = {
+                                          enabled: false,
+                                          beforeMatch: typeof match.notifications?.beforeMatch === 'number' ? match.notifications.beforeMatch : 15,
+                                          matchStart: typeof match.notifications?.matchStart === 'boolean' ? match.notifications.matchStart : true,
+                                          matchEnd: typeof match.notifications?.matchEnd === 'boolean' ? match.notifications.matchEnd : true,
+                                          scoreUpdate: typeof match.notifications?.scoreUpdate === 'boolean' ? match.notifications.scoreUpdate : true,
+                                        };
+                                        localStorage.setItem(`match_notifications_${match.id}`, JSON.stringify(updatedSettings));
+                                        setMatches(prev => prev.map((m, idx) => m.id === match.id && idx === index ? { ...m, notifications: updatedSettings } : m));
+                                      }}
+                                    >
+                                      <NotificationsOffIcon fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                )}
+                              </Box>
+                            </TableCell>
+                            <TableCell sx={{ verticalAlign: 'middle', minWidth: 200 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
                                 <img
-                                  src={match.team1LogoPng || match.team1LogoSvg || match.team1_logo_url || '/logos/default.png'}
-                                  alt={match.team1}
+                                  src={getTournamentLogo(match)}
+                                  alt={match.tournament_name}
                                   style={{
                                     width: 36,
                                     height: 36,
-                                    borderRadius: '50%',
+                                    borderRadius: 8,
                                     objectFit: 'cover',
                                     border: '1.5px solid #333',
                                     background: '#222',
                                     flexShrink: 0
                                   }}
-                                  onError={(e) => { e.currentTarget.src = '/logos/default.png'; }}
+                                  onError={e => { e.currentTarget.src = '/events/default-tournament-logo.png'; }}
                                 />
+                                <Typography variant="body1" fontWeight={600} sx={{ ml: 1 }}>
+                                  {match.tournament_name || match.match_event || '-'}
+                                </Typography>
                               </Box>
-                              <Typography
-                                variant="body2"
-                                fontWeight={700}
-                                sx={{
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  maxWidth: 90,
-                                  lineHeight: 1,
-                                  ml: 1,
-                                  height: 34,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'flex-end'
-                                }}
-                                title={match.team1}
-                              >
-                                {match.team1}
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                          {/* VS kutusu */}
-                          <TableCell align="center" sx={{ verticalAlign: 'middle', width: 60 }}>
-                            <Box sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              width: 40,
-                              minWidth: 40,
-                              height: 40
-                            }}>
+                            </TableCell>
+                            {/* Takım 1 kutusu */}
+                            <TableCell align="center" sx={{ verticalAlign: 'middle', width: 170 }}>
                               <Box sx={{
-                                width: 32,
-                                height: 32,
-                                borderRadius: '50%',
-                                background: 'rgba(255,255,255,0.12)',
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center'
+                                justifyContent: 'flex-end',
+                                gap: 1,
+                                background: 'rgba(255,255,255,0.06)',
+                                borderRadius: 2,
+                                px: 1.5,
+                                py: 0.5,
+                                height: 40,
+                                minWidth: 150,
+                                maxWidth: 170,
+                                transition: 'background 0.2s'
                               }}>
-                                <Typography variant="body2" color="text.secondary" sx={{
-                                  fontWeight: 700,
-                                  fontSize: 18,
-                                  lineHeight: 1,
+                                <Box sx={{
+                                  width: 40,
+                                  height: 40,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  background: '#181c27',
+                                  borderRadius: '50%'
+                                }}>
+                                  <img
+                                    src={match.team1LogoPng || match.team1LogoSvg || match.team1_logo_url || '/logos/default.png'}
+                                    alt={match.team1}
+                                    style={{
+                                      width: 36,
+                                      height: 36,
+                                      borderRadius: '50%',
+                                      objectFit: 'cover',
+                                      border: '1.5px solid #333',
+                                      background: '#222',
+                                      flexShrink: 0
+                                    }}
+                                    onError={(e) => { e.currentTarget.src = '/logos/default.png'; }}
+                                  />
+                                </Box>
+                                <Typography
+                                  variant="body2"
+                                  fontWeight={700}
+                                  sx={{
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    maxWidth: 90,
+                                    lineHeight: 1,
+                                    ml: 1,
+                                    height: 34,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'flex-end'
+                                  }}
+                                  title={match.team1}
+                                >
+                                  {match.team1}
+                                </Typography>
+                              </Box>
+                            </TableCell>
+                            {/* VS kutusu */}
+                            <TableCell align="center" sx={{ verticalAlign: 'middle', width: 60 }}>
+                              <Box sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: 40,
+                                minWidth: 40,
+                                height: 40
+                              }}>
+                                <Box sx={{
+                                  width: 32,
+                                  height: 32,
+                                  borderRadius: '50%',
+                                  background: 'rgba(255,255,255,0.12)',
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center'
                                 }}>
-                                  vs
+                                  <Typography variant="body2" color="text.secondary" sx={{
+                                    fontWeight: 700,
+                                    fontSize: 18,
+                                    lineHeight: 1,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}>
+                                    vs
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </TableCell>
+                            {/* Takım 2 kutusu */}
+                            <TableCell align="center" sx={{ verticalAlign: 'middle', width: 170 }}>
+                              <Box sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'flex-start',
+                                gap: 1,
+                                background: 'rgba(255,255,255,0.06)',
+                                borderRadius: 2,
+                                px: 1.5,
+                                py: 0.5,
+                                height: 40,
+                                minWidth: 150,
+                                maxWidth: 170,
+                                transition: 'background 0.2s'
+                              }}>
+                                <Box sx={{
+                                  width: 40,
+                                  height: 40,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  background: '#181c27',
+                                  borderRadius: '50%'
+                                }}>
+                                  <img
+                                    src={match.team2LogoPng || match.team2LogoSvg || match.team2_logo_url || '/logos/default.png'}
+                                    alt={match.team2}
+                                    style={{
+                                      width: 36,
+                                      height: 36,
+                                      borderRadius: '50%',
+                                      objectFit: 'cover',
+                                      border: '1.5px solid #333',
+                                      background: '#222',
+                                      flexShrink: 0
+                                    }}
+                                    onError={(e) => { e.currentTarget.src = '/logos/default.png'; }}
+                                  />
+                                </Box>
+                                <Typography
+                                  variant="body2"
+                                  fontWeight={700}
+                                  sx={{
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    maxWidth: 90,
+                                    lineHeight: 1,
+                                    ml: 1,
+                                    height: 34,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'flex-start'
+                                  }}
+                                  title={match.team2}
+                                >
+                                  {match.team2}
                                 </Typography>
                               </Box>
-                            </Box>
-                          </TableCell>
-                          {/* Takım 2 kutusu */}
-                          <TableCell align="center" sx={{ verticalAlign: 'middle', width: 170 }}>
-                            <Box sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'flex-start',
-                              gap: 1,
-                              background: 'rgba(255,255,255,0.06)',
-                              borderRadius: 2,
-                              px: 1.5,
-                              py: 0.5,
-                              height: 40,
-                              minWidth: 150,
-                              maxWidth: 170,
-                              transition: 'background 0.2s'
-                            }}>
+                            </TableCell>
+                            {/* Skor kutusu */}
+                            <TableCell align="center" sx={{ verticalAlign: 'middle', width: 70 }}>
                               <Box sx={{
-                                width: 40,
-                                height: 40,
+                                background: 'rgba(255,255,255,0.12)',
+                                borderRadius: 2,
+                                px: 1.5,
+                                py: 0.5,
+                                minWidth: 40,
+                                minHeight: 28,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                background: '#181c27',
-                                borderRadius: '50%'
+                                gap: 0.5
                               }}>
-                                <img
-                                  src={match.team2LogoPng || match.team2LogoSvg || match.team2_logo_url || '/logos/default.png'}
-                                  alt={match.team2}
-                                  style={{
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: '50%',
-                                    objectFit: 'cover',
-                                    border: '1.5px solid #333',
-                                    background: '#222',
-                                    flexShrink: 0
-                                  }}
-                                  onError={(e) => { e.currentTarget.src = '/logos/default.png'; }}
-                                />
-                              </Box>
-                              <Typography
-                                variant="body2"
-                                fontWeight={700}
-                                sx={{
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  maxWidth: 90,
-                                  lineHeight: 1,
-                                  ml: 1,
-                                  height: 34,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'flex-start'
-                                }}
-                                title={match.team2}
-                              >
-                                {match.team2}
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                          {/* Skor kutusu */}
-                          <TableCell align="center" sx={{ verticalAlign: 'middle', width: 70 }}>
-                            <Box sx={{
-                              background: 'rgba(255,255,255,0.12)',
-                              borderRadius: 2,
-                              px: 1.5,
-                              py: 0.5,
-                              minWidth: 40,
-                              minHeight: 28,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: 0.5
-                            }}>
-                              {match.score1 !== undefined && match.score2 !== undefined ? (
-                                (() => {
-                                  const s1 = Number(match.score1);
-                                  const s2 = Number(match.score2);
-                                  let color1 = 'text.secondary';
-                                  let color2 = 'text.secondary';
-                                  if (!isNaN(s1) && !isNaN(s2)) {
-                                    if (s1 > s2) {
-                                      color1 = 'success.main';
-                                    } else if (s2 > s1) {
-                                      color2 = 'success.main';
+                                {match.score1 !== undefined && match.score2 !== undefined ? (
+                                  (() => {
+                                    const s1 = Number(match.score1);
+                                    const s2 = Number(match.score2);
+                                    let color1 = 'text.secondary';
+                                    let color2 = 'text.secondary';
+                                    if (!isNaN(s1) && !isNaN(s2)) {
+                                      if (s1 > s2) {
+                                        color1 = 'success.main';
+                                      } else if (s2 > s1) {
+                                        color2 = 'success.main';
+                                      }
                                     }
-                                  }
-                                  return (
-                                    <>
-                                      <Typography variant="subtitle1" fontWeight={700} sx={{ fontSize: 16, minWidth: 18, textAlign: 'center' }} color={color1}>{match.score1}</Typography>
-                                      <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: 14, px: 0.5 }}>-</Typography>
-                                      <Typography variant="subtitle1" fontWeight={700} sx={{ fontSize: 16, minWidth: 18, textAlign: 'center' }} color={color2}>{match.score2}</Typography>
-                                    </>
-                                  );
-                                })()
-                              ) : (
-                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: 14 }}>-</Typography>
-                              )}
-                            </Box>
-                          </TableCell>
-                          <StatusCell sx={{ verticalAlign: 'middle' }}>
-                            {getStatusChip(match)}
-                          </StatusCell>
-                          <TimeCell sx={{ verticalAlign: 'middle' }}>
-                            <Typography variant="body2" color="text.secondary">
-                              {getDateLabel(match.date)}
-                              {match.time_until_match && match.time_until_match !== 'LIVE' && !match.time_completed && (
-                                <Box component="span" sx={{ ml: 1 }}>
-                                  {match.time_until_match}
-                                </Box>
-                              )}
-                            </Typography>
-                          </TimeCell>
-                        </AnimatedTableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </StyledTableContainer>
+                                    return (
+                                      <>
+                                        <Typography variant="subtitle1" fontWeight={700} sx={{ fontSize: 16, minWidth: 18, textAlign: 'center' }} color={color1}>{match.score1}</Typography>
+                                        <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: 14, px: 0.5 }}>-</Typography>
+                                        <Typography variant="subtitle1" fontWeight={700} sx={{ fontSize: 16, minWidth: 18, textAlign: 'center' }} color={color2}>{match.score2}</Typography>
+                                      </>
+                                    );
+                                  })()
+                                ) : (
+                                  <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: 14 }}>-</Typography>
+                                )}
+                              </Box>
+                            </TableCell>
+                            <StatusCell sx={{ verticalAlign: 'middle' }}>
+                              {getStatusChip(match)}
+                            </StatusCell>
+                            <TimeCell sx={{ verticalAlign: 'middle' }}>
+                              <Typography variant="body2" color="text.secondary">
+                                {getDateLabel(match.date)}
+                                {match.time_until_match && match.time_until_match !== 'LIVE' && !match.time_completed && (
+                                  <Box component="span" sx={{ ml: 1 }}>
+                                    {match.time_until_match}
+                                  </Box>
+                                )}
+                              </Typography>
+                            </TimeCell>
+                          </AnimatedTableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </StyledTableContainer>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

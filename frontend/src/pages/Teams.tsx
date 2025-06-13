@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import '../styles/Teams.css';
 import { api } from '../services/api';
 import { Favorite, FavoriteBorder, NotificationsActive, NotificationsOff } from '@mui/icons-material';
@@ -8,20 +8,21 @@ import { toast } from 'react-toastify';
 import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
 
-interface Team {
-  id: number;
-  name: string;
-  logo: string;
-  game: string;
-  region: string;
-}
-
 interface NotificationSettings {
   enabled: boolean;
   matchStart: boolean;
   scoreChange: boolean;
   matchEnd: boolean;
   beforeMatch: number;
+}
+
+interface Team {
+  id: string;
+  name: string;
+  logo: string;
+  game: string;
+  region: string;
+  notificationSettings: NotificationSettings;
 }
 
 const beforeMatchOptions = [5, 10, 15, 30, 45, 60];
@@ -33,11 +34,11 @@ const Teams: React.FC = () => {
   const [selectedGame, setSelectedGame] = useState<string>('all');
   const [selectedRegion, setSelectedRegion] = useState<string>('all');
   const [search, setSearch] = useState('');
-  const [favoriteTeams, setFavoriteTeams] = useState<number[]>(() => {
+  const [favoriteTeams, setFavoriteTeams] = useState<string[]>(() => {
     const stored = localStorage.getItem('favoriteTeams');
     return stored ? JSON.parse(stored) : [];
   });
-  const [notificationSettings, setNotificationSettings] = useState<{[key:number]: NotificationSettings}>(() => {
+  const [notificationSettings, setNotificationSettings] = useState<{[key: string]: NotificationSettings}>(() => {
     const stored = localStorage.getItem('teamNotificationSettings');
     return stored ? JSON.parse(stored) : {};
   });
@@ -88,50 +89,64 @@ const Teams: React.FC = () => {
     )
   );
 
-  const toggleFavorite = (team: Team) => {
-    let updated;
-    if (favoriteTeams.includes(team.id)) {
-      updated = favoriteTeams.filter(id => id !== team.id);
-      toast.info(`${team.name} favorilerden çıkarıldı`);
-    } else {
-      updated = [...favoriteTeams, team.id];
-      toast.success(`${team.name} favorilere eklendi`);
-    }
-    setFavoriteTeams(updated);
-    localStorage.setItem('favoriteTeams', JSON.stringify(updated));
-  };
-
-  const handleNotificationSettings = (team: Team) => {
-    setSelectedTeam(team);
-    setTempSettings(notificationSettings[team.id] || {
-      enabled: true,
-      matchStart: true,
-      scoreChange: true,
-      matchEnd: true,
-      beforeMatch: 15
+  const toggleFavorite = (teamId: string) => {
+    setFavoriteTeams(prev => {
+      const newFavorites = prev.includes(teamId)
+        ? prev.filter(id => id !== teamId)
+        : [...prev, teamId];
+      localStorage.setItem('favoriteTeams', JSON.stringify(newFavorites));
+      return newFavorites;
     });
-    setNotificationDialogOpen(true);
   };
 
-  const saveNotificationSettings = () => {
-    if (selectedTeam) {
-      const updatedSettings = {
-        ...notificationSettings,
-        [selectedTeam.id]: tempSettings
+  const hasActiveNotifications = useCallback((teamId: string) => {
+    const team = teams.find(t => t.id === teamId);
+    return team?.notificationSettings?.enabled || false;
+  }, [teams]);
+
+  const handleRegionChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    setSelectedRegion(event.target.value as string);
+  };
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(event.target.value);
+  };
+
+  const clearSearch = () => {
+    setSearch('');
+  };
+
+  const handleNotificationSettings = async (team: Team) => {
+    try {
+      const newSettings = {
+        ...team.notificationSettings,
+        enabled: !hasActiveNotifications(team.id)
       };
-      setNotificationSettings(updatedSettings);
-      localStorage.setItem('teamNotificationSettings', JSON.stringify(updatedSettings));
-      toast.success(`${selectedTeam.name} için bildirim ayarları kaydedildi`);
+
+      await api.post(`/api/notifications/settings`, {
+        teamId: team.id,
+        settings: newSettings
+      });
+
+      setTeams(prevTeams => 
+        prevTeams.map(t => 
+          t.id === team.id 
+            ? { ...t, notificationSettings: newSettings }
+            : t
+        )
+      );
+
+      toast.success(
+        hasActiveNotifications(team.id)
+          ? 'Bildirimler devre dışı bırakıldı'
+          : 'Bildirimler etkinleştirildi'
+      );
+    } catch (error) {
+      toast.error('Bildirim ayarları güncellenirken bir hata oluştu');
     }
-    setNotificationDialogOpen(false);
   };
 
-  const hasActiveNotifications = (teamId: number) => {
-    const settings = notificationSettings[teamId];
-    return settings && settings.enabled && (settings.matchStart || settings.scoreChange || settings.matchEnd);
-  };
-
-  const isFavorite = (teamId: number) => favoriteTeams.includes(teamId);
+  const isFavorite = (teamId: string) => favoriteTeams.includes(teamId);
 
   const getFlagUrl = (region: string) => {
     if (!region) return null;
@@ -175,12 +190,12 @@ const Teams: React.FC = () => {
               type="text"
               placeholder="Takım ara..."
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={handleSearchChange}
               className="team-search"
             />
             <SearchIcon style={{ position: 'absolute', left: 8, color: 'rgba(255, 255, 255, 0.7)', fontSize: 20 }} />
             {search && (
-              <IconButton size="small" onClick={() => setSearch('')} style={{ position: 'absolute', right: 4, color: 'rgba(255, 255, 255, 0.7)' }}>
+              <IconButton size="small" onClick={clearSearch} style={{ position: 'absolute', right: 4, color: 'rgba(255, 255, 255, 0.7)' }}>
                 <ClearIcon fontSize="small" />
               </IconButton>
             )}
@@ -196,7 +211,7 @@ const Teams: React.FC = () => {
           </select>
           <select 
             value={selectedRegion} 
-            onChange={(e) => setSelectedRegion(e.target.value)}
+            onChange={handleRegionChange}
           >
             <option value="all">Tüm Bölgeler</option>
             <option value="TR">Türk</option>
@@ -236,7 +251,7 @@ const Teams: React.FC = () => {
                 whileTap={{ scale: 0.9 }}
               >
                 <IconButton
-                  onClick={() => toggleFavorite(team)}
+                  onClick={() => toggleFavorite(team.id)}
                   className={`favorite-btn${isFavorite(team.id) ? ' active' : ''}`}
                   aria-label={isFavorite(team.id) ? 'Favoriden çıkar' : 'Favoriye ekle'}
                 >
@@ -269,6 +284,7 @@ const Teams: React.FC = () => {
                 <IconButton
                   onClick={() => handleNotificationSettings(team)}
                   className="notification-btn"
+                  size="small"
                 >
                   <Badge
                     color="error"
@@ -355,7 +371,9 @@ const Teams: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setNotificationDialogOpen(false)}>İptal</Button>
-          <Button onClick={saveNotificationSettings} variant="contained" color="primary">
+          <Button onClick={() => {
+            // Implement the logic to save the new settings
+          }} variant="contained" color="primary">
             Kaydet
           </Button>
         </DialogActions>

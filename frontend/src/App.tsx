@@ -25,6 +25,7 @@ import Favorites from './pages/Favorites';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
 import Notifications from './pages/Notifications';
+import Events from './pages/Events';
 
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from './store';
@@ -79,6 +80,7 @@ function AppContent() {
                 <Route path="/favorites" element={<Favorites />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/notifications" element={<Notifications />} />
+                <Route path="/events" element={<Events />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </div>

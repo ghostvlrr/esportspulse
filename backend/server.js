@@ -19,11 +19,26 @@ const port = process.env.PORT || 3001;
 const limiter = rateLimit({
   windowMs: process.env.RATE_LIMIT_WINDOW_MS || 900000, // 15 minutes
   max: process.env.RATE_LIMIT_MAX_REQUESTS || 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.path.startsWith('/api/health'),
+  handler: (req, res) => {
+    res.status(429).json({
+      error: 'Rate limit exceeded',
+      message: 'Çok fazla istek gönderdiniz. Lütfen daha sonra tekrar deneyin.',
+      retryAfter: Math.ceil(limiter.windowMs / 1000)
+    });
+  }
 });
 
 // Apply rate limiting to all routes
-app.use(limiter);
+app.use('/api/', limiter);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
 
 // CORS ayarları
 const corsOptions = {
@@ -662,9 +677,30 @@ function parseTimeCompleted(str) {
 // Hata yönetimi middleware'i
 app.use((err, req, res, next) => {
   console.error('Sunucu hatası:', err);
-  res.status(500).json({
-    error: 'Sunucu hatası',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Bir hata oluştu'
+  
+  // Hata tipine göre özel mesajlar
+  let errorMessage = 'Bir hata oluştu';
+  let statusCode = 500;
+
+  if (err.name === 'ValidationError') {
+    statusCode = 400;
+    errorMessage = 'Geçersiz veri formatı';
+  } else if (err.name === 'UnauthorizedError') {
+    statusCode = 401;
+    errorMessage = 'Yetkisiz erişim';
+  } else if (err.name === 'ForbiddenError') {
+    statusCode = 403;
+    errorMessage = 'Bu işlem için yetkiniz yok';
+  } else if (err.name === 'NotFoundError') {
+    statusCode = 404;
+    errorMessage = 'İstenen kaynak bulunamadı';
+  }
+
+  res.status(statusCode).json({
+    error: errorMessage,
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined,
+    timestamp: new Date().toISOString(),
+    path: req.path
   });
 });
 
@@ -680,13 +716,78 @@ app.use((req, res) => {
 io.on('connection', (socket) => {
   console.log('Yeni kullanıcı bağlandı:', socket.id);
 
+  // Bağlantı durumunu kontrol et
+  const checkConnection = () => {
+    if (!socket.connected) {
+      console.log('Bağlantı koptu:', socket.id);
+      return false;
+    }
+    return true;
+  };
+
+  // Kullanıcı odaya katılma
   socket.on('join', (userId) => {
-    socket.join(userId);
-    console.log(`Kullanıcı ${userId} odasına katıldı`);
+    if (!checkConnection()) return;
+    
+    try {
+      socket.join(userId);
+      console.log(`Kullanıcı ${userId} odasına katıldı`);
+      
+      // Bağlantı durumunu bildir
+      socket.emit('connection_status', {
+        status: 'connected',
+        userId: userId,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Oda katılım hatası:', error);
+      socket.emit('error', {
+        message: 'Odaya katılırken bir hata oluştu',
+        code: 'ROOM_JOIN_ERROR'
+      });
+    }
   });
 
+  // Özel mesaj gönderme
+  socket.on('private_message', (data) => {
+    if (!checkConnection()) return;
+    
+    try {
+      const { recipientId, message } = data;
+      io.to(recipientId).emit('private_message', {
+        senderId: socket.id,
+        message,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Mesaj gönderme hatası:', error);
+      socket.emit('error', {
+        message: 'Mesaj gönderilirken bir hata oluştu',
+        code: 'MESSAGE_SEND_ERROR'
+      });
+    }
+  });
+
+  // Bağlantı koptuğunda
   socket.on('disconnect', () => {
     console.log('Kullanıcı ayrıldı:', socket.id);
+    
+    // Tüm odalardan çıkar
+    socket.rooms.forEach(room => {
+      if (room !== socket.id) {
+        socket.leave(room);
+        console.log(`Kullanıcı ${socket.id} ${room} odasından ayrıldı`);
+      }
+    });
+  });
+
+  // Hata durumunda
+  socket.on('error', (error) => {
+    console.error('Socket hatası:', error);
+    socket.emit('error', {
+      message: 'Bir hata oluştu',
+      code: 'SOCKET_ERROR'
+    });
   });
 });
 
