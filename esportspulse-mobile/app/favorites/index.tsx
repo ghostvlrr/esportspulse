@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, SafeAreaView } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { apiService } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +15,8 @@ interface Favorite {
   status?: string;
   date?: string;
 }
+
+const CARD_WIDTH = Dimensions.get('window').width - 32;
 
 export default function FavoritesScreen() {
   const { theme } = useTheme();
@@ -56,34 +58,80 @@ export default function FavoritesScreen() {
     }
   };
 
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'team':
+        return 'people-outline';
+      case 'player':
+        return 'person-outline';
+      case 'match':
+        return 'game-controller-outline';
+      case 'tournament':
+        return 'trophy-outline';
+      default:
+        return 'star-outline';
+    }
+  };
+
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'team':
+        return 'Takım';
+      case 'player':
+        return 'Oyuncu';
+      case 'match':
+        return 'Maç';
+      case 'tournament':
+        return 'Turnuva';
+      default:
+        return 'Favori';
+    }
+  };
+
   const renderFavoriteItem = ({ item }: { item: Favorite }) => (
-    <View style={[styles.favoriteCard, { backgroundColor: theme.colors.surface }]}>
-      <Image source={{ uri: item.imageUrl }} style={styles.favoriteImage} />
+    <View style={[styles.favoriteCard, { backgroundColor: theme.colors.background }]}>
+      <Image 
+        source={{ uri: item.imageUrl }} 
+        style={styles.favoriteImage}
+        resizeMode="cover"
+      />
       <View style={styles.favoriteContent}>
         <View style={styles.favoriteHeader}>
-          <Text style={[styles.favoriteType, { color: theme.colors.primary }]}>
-            {item.type === 'team' ? 'Takım' : item.type === 'player' ? 'Oyuncu' : item.type === 'match' ? 'Maç' : 'Turnuva'}
-          </Text>
-          <TouchableOpacity onPress={() => removeFavorite(item.id)}>
-            <Ionicons name="heart" size={24} color={theme.colors.primary} />
+          <View style={[styles.typeBadge, { backgroundColor: theme.colors.primary + '20' }]}>
+            <Ionicons name={getTypeIcon(item.type)} size={14} color={theme.colors.primary} style={{ marginRight: 4 }} />
+            <Text style={[styles.favoriteType, { color: theme.colors.primary }]}>
+              {getTypeLabel(item.type)}
+            </Text>
+          </View>
+          <TouchableOpacity 
+            onPress={() => removeFavorite(item.id)}
+            style={[styles.removeButton, { backgroundColor: theme.colors.primary + '20' }]}
+          >
+            <Ionicons name="heart" size={20} color={theme.colors.primary} />
           </TouchableOpacity>
         </View>
-        <Text style={[styles.favoriteName, { color: theme.colors.text }]}>{item.name}</Text>
+        <Text style={[styles.favoriteName, { color: theme.colors.text }]} numberOfLines={1}>
+          {item.name}
+        </Text>
         {item.description && (
-          <Text style={[styles.favoriteDescription, { color: theme.colors.text }]} numberOfLines={2}>
+          <Text style={[styles.favoriteDescription, { color: theme.colors.text, opacity: 0.8 }]} numberOfLines={2}>
             {item.description}
           </Text>
         )}
-        {item.status && (
-          <Text style={[styles.favoriteStatus, { color: theme.colors.text }]}>
-            {item.status}
-          </Text>
-        )}
-        {item.date && (
-          <Text style={[styles.favoriteDate, { color: theme.colors.text }]}>
-            {item.date}
-          </Text>
-        )}
+        <View style={styles.favoriteFooter}>
+          {item.status && (
+            <View style={[styles.statusBadge, { backgroundColor: theme.colors.primary + '20' }]}>
+              <Text style={[styles.favoriteStatus, { color: theme.colors.primary }]}>
+                {item.status}
+              </Text>
+            </View>
+          )}
+          {item.date && (
+            <Text style={[styles.favoriteDate, { color: theme.colors.text, opacity: 0.7 }]}>
+              {item.date}
+            </Text>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -95,6 +143,7 @@ export default function FavoritesScreen() {
         selectedFilter === filter && { backgroundColor: theme.colors.primary },
       ]}
       onPress={() => setSelectedFilter(filter)}
+      activeOpacity={0.7}
     >
       <Text
         style={[
@@ -110,7 +159,7 @@ export default function FavoritesScreen() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <Text style={[styles.loadingText, { color: theme.colors.text }]}>Yükleniyor...</Text>
+        <ActivityIndicator size="large" color={theme.colors.primary} style={{ marginTop: 48 }} />
       </SafeAreaView>
     );
   }
@@ -119,11 +168,11 @@ export default function FavoritesScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={styles.emptyContainer}>
-          <Ionicons name="heart-outline" size={64} color={theme.colors.text} />
+          <Ionicons name="heart-outline" size={64} color={theme.colors.primary} style={{ marginBottom: 16 }} />
           <Text style={[styles.emptyText, { color: theme.colors.text }]}>
             Henüz favori eklenmemiş
           </Text>
-          <Text style={[styles.emptySubtext, { color: theme.colors.text }]}>
+          <Text style={[styles.emptySubtext, { color: theme.colors.text, opacity: 0.7 }]}>
             Favori eklemek için ilgili sayfaları ziyaret edin
           </Text>
         </View>
@@ -133,19 +182,24 @@ export default function FavoritesScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.filterContainer}>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filterContainer}
+      >
         {renderFilterButton('all', 'Tümü')}
         {renderFilterButton('team', 'Takımlar')}
         {renderFilterButton('player', 'Oyuncular')}
         {renderFilterButton('match', 'Maçlar')}
         {renderFilterButton('tournament', 'Turnuvalar')}
-      </View>
+      </ScrollView>
 
       <FlatList
         data={favorites}
         renderItem={renderFavoriteItem}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={[styles.listContainer, { backgroundColor: theme.colors.background }]}
+        style={{ backgroundColor: theme.colors.background }}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
@@ -157,7 +211,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   filterContainer: {
-    flexDirection: 'row',
     padding: 16,
     gap: 8,
   },
@@ -166,6 +219,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: 'rgba(255, 0, 0, 0.1)',
+    marginRight: 8,
   },
   filterButtonText: {
     fontSize: 14,
@@ -175,64 +229,84 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   favoriteCard: {
-    flexDirection: 'row',
-    borderRadius: 12,
-    marginBottom: 16,
+    borderRadius: 16,
+    marginBottom: 20,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   favoriteImage: {
-    width: 100,
-    height: 100,
+    width: '100%',
+    height: 160,
+    backgroundColor: '#222',
   },
   favoriteContent: {
-    flex: 1,
-    padding: 12,
+    padding: 16,
   },
   favoriteHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 12,
+  },
+  typeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   favoriteType: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  removeButton: {
+    padding: 8,
+    borderRadius: 12,
   },
   favoriteName: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
   },
   favoriteDescription: {
     fontSize: 14,
-    marginBottom: 4,
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  favoriteFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   favoriteStatus: {
     fontSize: 12,
-    marginBottom: 2,
+    fontWeight: '600',
   },
   favoriteDate: {
     fontSize: 12,
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
+    justifyContent: 'center',
+    marginTop: 64,
   },
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    marginTop: 16,
     marginBottom: 8,
   },
   emptySubtext: {
-    fontSize: 14,
+    fontSize: 15,
     textAlign: 'center',
-  },
-  loadingText: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginTop: 20,
   },
 }); 

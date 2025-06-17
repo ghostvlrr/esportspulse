@@ -1,47 +1,38 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
+import { Container, Typography, Button, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, Button, Container } from '@mui/material';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 
 const NotFound: React.FC = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
 
   return (
-    <Container maxWidth="sm">
+    <Container maxWidth="xl" sx={{ py: 4 }}>
       <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        minHeight="80vh"
-        textAlign="center"
-      >
-        <ErrorOutlineIcon
-          sx={{
-            fontSize: 100,
-            color: 'error.main',
-            mb: 2,
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '60vh',
+          textAlign: 'center',
           }}
-        />
+      >
         <Typography variant="h1" component="h1" gutterBottom>
           404
         </Typography>
         <Typography variant="h4" component="h2" gutterBottom>
-          {t('errors.notFound')}
+          Sayfa Bulunamadı
         </Typography>
         <Typography variant="body1" color="text.secondary" paragraph>
-          {t('errors.pageNotFound', 'Aradığınız sayfa bulunamadı.')}
+          Aradığınız sayfa mevcut değil veya taşınmış olabilir.
         </Typography>
         <Button
           variant="contained"
           color="primary"
-          size="large"
           onClick={() => navigate('/')}
           sx={{ mt: 2 }}
         >
-          {t('common.backToHome', 'Ana Sayfaya Dön')}
+          Ana Sayfaya Dön
         </Button>
       </Box>
     </Container>

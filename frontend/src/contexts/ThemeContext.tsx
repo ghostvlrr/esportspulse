@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getMuiTheme } from '../theme';
+import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 
 interface ThemeContextType {
   themeKey: string;
@@ -54,7 +55,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   return (
     <ThemeContext.Provider value={{ themeKey, muiTheme, changeTheme }}>
-      {children}
+      <MuiThemeProvider theme={muiTheme}>
+        {children}
+      </MuiThemeProvider>
     </ThemeContext.Provider>
   );
 };

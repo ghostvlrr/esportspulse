@@ -1,56 +1,27 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, SafeAreaView } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
-import { apiService } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
+import { getNews } from '@/services/vlrApi';
 
-interface News {
-  id: string;
-  title: string;
-  summary: string;
-  content: string;
-  imageUrl: string;
-  author: string;
-  date: string;
-  category: string;
-}
+const CARD_WIDTH = Dimensions.get('window').width - 32;
 
 export default function NewsScreen() {
   const { theme } = useTheme();
-  const [news, setNews] = React.useState<News[]>([]);
+  const [news, setNews] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [selectedCategory, setSelectedCategory] = React.useState('all');
 
   React.useEffect(() => {
     fetchNews();
-  }, [selectedCategory]);
+  }, []);
 
   const fetchNews = async () => {
+    setLoading(true);
     try {
-      // VLRGG API'de news endpoint yok, dummy veri kullanılıyor
-      setNews([
-        {
-          id: '1',
-          title: 'Valorant Dünya Şampiyonası Başladı',
-          summary: 'Dünyanın en iyi takımları şampiyonluk için mücadele ediyor.',
-          content: '',
-          imageUrl: 'https://images.unsplash.com/photo-1511512578047-dfb367046420',
-          author: 'Admin',
-          date: '2024-06-17',
-          category: 'tournaments',
-        },
-        {
-          id: '2',
-          title: 'Yeni Transferler Açıklandı',
-          summary: 'Birçok yıldız oyuncu yeni takımlarına transfer oldu.',
-          content: '',
-          imageUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
-          author: 'Editör',
-          date: '2024-06-16',
-          category: 'transfers',
-        },
-      ]);
+      const data = await getNews();
+      setNews(data);
     } catch (error) {
       console.error('Haber verileri yüklenirken hata:', error);
     } finally {
@@ -58,24 +29,46 @@ export default function NewsScreen() {
     }
   };
 
-  const renderNewsItem = ({ item }: { item: News }) => (
+  // Kategorileri API'den gelen haberlerden türet
+  const categories = React.useMemo(() => {
+    const cats = Array.from(new Set(news.map((n) => n.category).filter(Boolean)));
+    return ['all', ...cats];
+  }, [news]);
+
+  const filteredNews = selectedCategory === 'all'
+    ? news
+    : news.filter((item) => item.category === selectedCategory);
+
+  const renderNewsItem = ({ item }: { item: any }) => (
     <Link href={`/news/${item.id}`} asChild>
-      <TouchableOpacity style={[styles.newsCard, { backgroundColor: theme.colors.surface }]}>
-        <Image source={{ uri: item.imageUrl }} style={styles.newsImage} />
+      <TouchableOpacity 
+        style={[styles.newsCard, { backgroundColor: theme.colors.background }]}
+        activeOpacity={0.9}
+      >
+        {item.image && (
+          <Image 
+            source={{ uri: item.image }} 
+            style={styles.newsImage}
+            resizeMode="cover"
+          />
+        )}
         <View style={styles.newsContent}>
           <View style={styles.newsHeader}>
-            <Text style={[styles.category, { color: theme.colors.primary }]}>{item.category}</Text>
-            <Text style={[styles.date, { color: theme.colors.text }]}>{item.date}</Text>
+            <View style={[styles.categoryBadge, { backgroundColor: theme.colors.primary + '20' }]}> 
+              <Text style={[styles.category, { color: theme.colors.primary }]}>{item.category || 'Genel'}</Text>
+            </View>
+            <Text style={[styles.date, { color: theme.colors.text, opacity: 0.7 }]}>{item.date ? new Date(item.date).toLocaleDateString('tr-TR') : ''}</Text>
           </View>
-          <Text style={[styles.title, { color: theme.colors.text }]}>{item.title}</Text>
-          <Text style={[styles.summary, { color: theme.colors.text }]} numberOfLines={2}>
-            {item.summary}
+          <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={2}>{item.title}</Text>
+          <Text style={[styles.summary, { color: theme.colors.text, opacity: 0.8 }]} numberOfLines={2}>
+            {item.summary || item.description || ''}
           </Text>
           <View style={styles.footer}>
-            <Text style={[styles.author, { color: theme.colors.text }]}>
-              {item.author}
-            </Text>
-            <Ionicons name="chevron-forward" size={20} color={theme.colors.text} />
+            <View style={styles.authorContainer}>
+              <Ionicons name="person-outline" size={16} color={theme.colors.text} style={{ marginRight: 4 }} />
+              <Text style={[styles.author, { color: theme.colors.text, opacity: 0.7 }]}> {item.author || ''} </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.primary} />
           </View>
         </View>
       </TouchableOpacity>
@@ -89,6 +82,7 @@ export default function NewsScreen() {
         selectedCategory === category && { backgroundColor: theme.colors.primary },
       ]}
       onPress={() => setSelectedCategory(category)}
+      activeOpacity={0.7}
     >
       <Text
         style={[
@@ -104,33 +98,42 @@ export default function NewsScreen() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
-        <Text style={[styles.loadingText, { color: theme.colors.text }]}>Yükleniyor...</Text>
+        <ActivityIndicator size="large" color={theme.colors.primary} style={{ marginTop: 48 }} />
       </SafeAreaView>
     );
   }
 
-  if (!news.length) {
+  if (!filteredNews.length) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
-        <Text style={[styles.loadingText, { color: theme.colors.text }]}>Haber verisi alınamadı. Lütfen bağlantınızı ve API sunucunuzu kontrol edin.</Text>
+        <View style={styles.emptyContainer}>
+          <Ionicons name="newspaper-outline" size={64} color={theme.colors.primary} style={{ marginBottom: 16 }} />
+          <Text style={[styles.emptyText, { color: theme.colors.text }]}>Haber bulunamadı</Text>
+          <Text style={[styles.emptySubtext, { color: theme.colors.text, opacity: 0.7 }]}>Lütfen daha sonra tekrar deneyin</Text>
+        </View>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
-      <View style={styles.categoriesContainer}>
-        {renderCategoryButton('all', 'Tümü')}
-        {renderCategoryButton('tournaments', 'Turnuvalar')}
-        {renderCategoryButton('teams', 'Takımlar')}
-        {renderCategoryButton('players', 'Oyuncular')}
-        {renderCategoryButton('transfers', 'Transferler')}
-      </View>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.categoriesContainer}
+      >
+        {categories.map((cat, idx) => (
+          <React.Fragment key={cat || idx}>
+            {renderCategoryButton(cat, cat === 'all' ? 'Tümü' : cat)}
+          </React.Fragment>
+        ))}
+      </ScrollView>
       <FlatList
-        data={news}
+        data={filteredNews}
         renderItem={renderNewsItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
+        keyExtractor={(item, idx) => String(item.id || idx)}
+        contentContainerStyle={[styles.listContainer, { backgroundColor: theme.colors.background }]}
+        style={{ backgroundColor: theme.colors.background }}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
@@ -142,7 +145,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   categoriesContainer: {
-    flexDirection: 'row',
     padding: 16,
     gap: 8,
   },
@@ -151,6 +153,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: 'rgba(255, 0, 0, 0.1)',
+    marginRight: 8,
   },
   categoryButtonText: {
     fontSize: 14,
@@ -160,13 +163,18 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   newsCard: {
-    borderRadius: 12,
-    marginBottom: 16,
+    borderRadius: 16,
+    marginBottom: 20,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   newsImage: {
     width: '100%',
     height: 200,
+    backgroundColor: '#222',
   },
   newsContent: {
     padding: 16,
@@ -175,36 +183,57 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
+  },
+  categoryBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   category: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
   },
   date: {
-    fontSize: 14,
+    fontSize: 12,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: 'bold',
     marginBottom: 8,
+    lineHeight: 26,
   },
   summary: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 12,
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 16,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  author: {
-    fontSize: 14,
+  authorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  loadingText: {
-    fontSize: 16,
+  author: {
+    fontSize: 13,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 64,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 15,
     textAlign: 'center',
-    marginTop: 20,
   },
 }); 

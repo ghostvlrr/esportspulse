@@ -2,7 +2,9 @@ import React from 'react';
 import { Card, CardContent, CardMedia, Typography, Box } from '@mui/material';
 
 const EventCard = ({ event }) => {
-    const logoPath = event.logo ? `/events/processed/${event.logo}` : '/events/default-tournament-logo.png';
+    const logoPath = event.logo 
+        ? `/events/processed/${event.logo}`
+        : '/events/default-tournament-logo.png';
 
     return (
         <Card sx={{ 

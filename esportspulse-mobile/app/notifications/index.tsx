@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { notificationService, Notification } from '@/services/notifications';
 import { Ionicons } from '@expo/vector-icons';
@@ -40,35 +40,59 @@ export default function NotificationsScreen() {
     await notificationService.clearAllNotifications();
   };
 
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'match':
+        return 'trophy';
+      case 'news':
+        return 'newspaper';
+      case 'event':
+        return 'calendar';
+      default:
+        return 'notifications';
+    }
+  };
+
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'match':
+        return 'Maç';
+      case 'news':
+        return 'Haber';
+      case 'event':
+        return 'Etkinlik';
+      default:
+        return 'Sistem';
+    }
+  };
+
   const renderNotificationItem = ({ item }: { item: Notification }) => (
-    <View style={[styles.notificationCard, { backgroundColor: theme.colors.surface }]}>
+    <View 
+      style={[
+        styles.notificationCard, 
+        { 
+          backgroundColor: theme.colors.background,
+          borderLeftWidth: item.read ? 0 : 4,
+          borderLeftColor: item.read ? 'transparent' : theme.colors.primary,
+        }
+      ]}
+    >
       <View style={styles.notificationHeader}>
-        <View style={styles.notificationType}>
+        <View style={[styles.notificationType, { backgroundColor: theme.colors.primary + '20' }]}>
           <Ionicons
-            name={
-              item.type === 'match'
-                ? 'trophy'
-                : item.type === 'news'
-                ? 'newspaper'
-                : item.type === 'event'
-                ? 'calendar'
-                : 'notifications'
-            }
-            size={20}
+            name={getTypeIcon(item.type)}
+            size={16}
             color={theme.colors.primary}
           />
           <Text style={[styles.notificationTypeText, { color: theme.colors.primary }]}>
-            {item.type === 'match'
-              ? 'Maç'
-              : item.type === 'news'
-              ? 'Haber'
-              : item.type === 'event'
-              ? 'Etkinlik'
-              : 'Sistem'}
+            {getTypeLabel(item.type)}
           </Text>
         </View>
-        <TouchableOpacity onPress={() => handleDeleteNotification(item.id)}>
-          <Ionicons name="close" size={20} color={theme.colors.text} />
+        <TouchableOpacity 
+          onPress={() => handleDeleteNotification(item.id)}
+          style={[styles.deleteButton, { backgroundColor: theme.colors.primary + '20' }]}
+        >
+          <Ionicons name="close" size={16} color={theme.colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -76,12 +100,40 @@ export default function NotificationsScreen() {
         style={styles.notificationContent}
         onPress={() => handleMarkAsRead(item.id)}
         disabled={item.read}
+        activeOpacity={0.7}
       >
-        <Text style={[styles.notificationTitle, { color: theme.colors.text }]}>{item.title}</Text>
-        <Text style={[styles.notificationMessage, { color: theme.colors.text }]}>
+        <Text 
+          style={[
+            styles.notificationTitle, 
+            { 
+              color: theme.colors.text,
+              opacity: item.read ? 0.7 : 1,
+              fontWeight: item.read ? 'normal' : 'bold',
+            }
+          ]}
+        >
+          {item.title}
+        </Text>
+        <Text 
+          style={[
+            styles.notificationMessage, 
+            { 
+              color: theme.colors.text,
+              opacity: item.read ? 0.7 : 0.9,
+            }
+          ]}
+        >
           {item.message}
         </Text>
-        <Text style={[styles.notificationDate, { color: theme.colors.text }]}>
+        <Text 
+          style={[
+            styles.notificationDate, 
+            { 
+              color: theme.colors.text,
+              opacity: 0.6,
+            }
+          ]}
+        >
           {item.createdAt}
         </Text>
       </TouchableOpacity>
@@ -91,7 +143,7 @@ export default function NotificationsScreen() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <Text style={[styles.loadingText, { color: theme.colors.text }]}>Yükleniyor...</Text>
+        <ActivityIndicator size="large" color={theme.colors.primary} style={{ marginTop: 48 }} />
       </SafeAreaView>
     );
   }
@@ -100,11 +152,11 @@ export default function NotificationsScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={styles.emptyContainer}>
-          <Ionicons name="notifications-off" size={64} color={theme.colors.text} />
+          <Ionicons name="notifications-off" size={64} color={theme.colors.primary} style={{ marginBottom: 16 }} />
           <Text style={[styles.emptyText, { color: theme.colors.text }]}>
             Bildirim bulunmuyor
           </Text>
-          <Text style={[styles.emptySubtext, { color: theme.colors.text }]}>
+          <Text style={[styles.emptySubtext, { color: theme.colors.text, opacity: 0.7 }]}>
             Yeni bildirimler burada görünecek
           </Text>
         </View>
@@ -118,22 +170,21 @@ export default function NotificationsScreen() {
         <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Bildirimler</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity
-            style={styles.headerButton}
+            style={[styles.headerButton, { backgroundColor: theme.colors.primary + '20' }]}
             onPress={handleMarkAllAsRead}
             disabled={notifications.every((n) => n.read)}
           >
             <Ionicons
               name="checkmark-done"
-              size={24}
-              color={
-                notifications.every((n) => n.read)
-                  ? theme.colors.text
-                  : theme.colors.primary
-              }
+              size={20}
+              color={theme.colors.primary}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton} onPress={handleClearAll}>
-            <Ionicons name="trash" size={24} color={theme.colors.primary} />
+          <TouchableOpacity 
+            style={[styles.headerButton, { backgroundColor: theme.colors.primary + '20' }]} 
+            onPress={handleClearAll}
+          >
+            <Ionicons name="trash" size={20} color={theme.colors.primary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -142,7 +193,8 @@ export default function NotificationsScreen() {
         data={notifications}
         renderItem={renderNotificationItem}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={[styles.listContainer, { backgroundColor: theme.colors.background }]}
+        style={{ backgroundColor: theme.colors.background }}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
@@ -158,25 +210,31 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
+    paddingBottom: 8,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
   },
   headerActions: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 12,
   },
   headerButton: {
-    padding: 8,
+    padding: 10,
+    borderRadius: 12,
   },
   listContainer: {
     padding: 16,
   },
   notificationCard: {
-    borderRadius: 12,
+    borderRadius: 16,
     marginBottom: 16,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   notificationHeader: {
     flexDirection: 'row',
@@ -187,47 +245,49 @@ const styles = StyleSheet.create({
   notificationType: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 6,
   },
   notificationTypeText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  deleteButton: {
+    padding: 8,
+    borderRadius: 12,
   },
   notificationContent: {
-    padding: 12,
+    padding: 16,
     paddingTop: 0,
   },
   notificationTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   notificationMessage: {
     fontSize: 14,
-    marginBottom: 8,
+    lineHeight: 20,
+    marginBottom: 12,
   },
   notificationDate: {
     fontSize: 12,
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
+    justifyContent: 'center',
+    marginTop: 64,
   },
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    marginTop: 16,
     marginBottom: 8,
   },
   emptySubtext: {
-    fontSize: 14,
+    fontSize: 15,
     textAlign: 'center',
-  },
-  loadingText: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginTop: 20,
   },
 }); 

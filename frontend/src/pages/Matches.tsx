@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { matchService } from '../services/api';
 import {
   Container,
   Table,
@@ -46,45 +45,21 @@ import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import '../styles/Matches.css';
 import { useNotifications } from '../hooks/useNotifications';
-import { api } from '../services/api';
+import { useDispatch } from 'react-redux';
+import { addNotification } from '../store/slices/notificationSlice';
+import { useQuery } from 'react-query';
+import matchService from '../services/matchService';
+import { Match } from '../types/match';
+import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../hooks/useAuth';
 
 interface NotificationSettings {
   enabled: boolean;
-  beforeMatch: number; // dakika cinsinden
+  beforeMatch: number;
   matchStart: boolean;
   matchEnd: boolean;
   scoreUpdate: boolean;
   round_info?: string;
-}
-
-interface Match {
-  id: string;
-  team1: string;
-  team2: string;
-  team1Logo?: string;
-  team2Logo?: string;
-  team1_logo_url?: string;
-  team2_logo_url?: string;
-  score1?: string;
-  score2?: string;
-  time_completed?: string;
-  time_until_match?: string;
-  match_event?: string;
-  match_series?: string;
-  tournament_name?: string;
-  round_info?: string;
-  status?: string;
-  match_page?: string;
-  tournament_icon?: string;
-  tournamentIcon?: string;
-  date: Date;
-  notifications?: NotificationSettings;
-  team1LogoPng?: string;
-  team1LogoSvg?: string;
-  team2LogoPng?: string;
-  team2LogoSvg?: string;
-  _rowIndex?: number;
-  parsed_date?: string;
 }
 
 type FilterType = 'all' | 'live' | 'upcoming' | 'past';
@@ -95,6 +70,31 @@ const filterLabels: Record<FilterType, string> = {
   upcoming: 'Yaklaşan',
   past: 'Tamamlanan',
 };
+
+const normalize = (text: string) => {
+  if (!text) return '';
+  return text
+    .toLowerCase()
+    .replace(/ş/g, 's')
+    .replace(/ı/g, 'i')
+    .replace(/ç/g, 'c')
+    .replace(/ü/g, 'u')
+    .replace(/ö/g, 'o')
+    .replace(/ğ/g, 'g')
+    .replace(/[^a-z0-9]/g, '')
+    .replace(/\s+/g, '')
+    .trim();
+};
+
+const StatusCell = styled(TableCell)(({ theme }) => ({
+  width: '120px',
+  textAlign: 'center',
+}));
+
+const TimeCell = styled(TableCell)(({ theme }) => ({
+  width: '150px',
+  textAlign: 'center',
+}));
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   '&.MuiTableCell-head': {
@@ -199,66 +199,6 @@ const NotificationSwitch = styled(Switch)(({ theme }) => ({
 
 const DEFAULT_TOURNAMENT_LOGO = '/logos/default-tournament-logo.svg';
 
-const getDateLabel = (date: Date | null | undefined) => {
-  if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
-    return '-';
-  }
-
-  try {
-    // Tarihi yerel saat dilimine çevir
-    const localDate = new Date(date.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' }));
-    
-    if (isToday(localDate)) return 'Bugün';
-    if (isTomorrow(localDate)) return 'Yarın';
-    if (isYesterday(localDate)) return 'Dün';
-    return formatDate(localDate, 'd MMMM yyyy', { locale: tr });
-  } catch (error) {
-    console.error('Tarih formatlanırken hata:', error);
-    return '-';
-  }
-};
-
-const StatusCell = styled(TableCell)(({ theme }) => ({
-  textAlign: 'center',
-  minWidth: 90,
-  borderBottom: `1px solid ${theme.palette.divider}`,
-  padding: theme.spacing(1.5, 2),
-}));
-
-const TimeCell = styled(TableCell)(({ theme }) => ({
-  textAlign: 'right',
-  minWidth: 120,
-  borderBottom: `1px solid ${theme.palette.divider}`,
-  padding: theme.spacing(1.5, 2),
-}));
-
-// Takım ve turnuva logoları için normalize fonksiyonu (Türkçe karakter desteği)
-const normalize = (str: string) =>
-  str
-    .toLowerCase()
-    .replace(/ş/g, 's')
-    .replace(/ı/g, 'i')
-    .replace(/ç/g, 'c')
-    .replace(/ü/g, 'u')
-    .replace(/ö/g, 'o')
-    .replace(/ğ/g, 'g')
-    .replace(/[^a-z0-9]/g, '');
-
-const normalizeName = (str: string) => {
-  const normalized = str
-    .toLowerCase()
-    .replace(/ş/g, 's')
-    .replace(/ı/g, 'i')
-    .replace(/ç/g, 'c')
-    .replace(/ü/g, 'u')
-    .replace(/ö/g, 'o')
-    .replace(/ğ/g, 'g')
-    .replace(/[^a-z0-9 ]/g, '')
-    .replace(/\s+/g, '-')
-    .trim();
-  return normalized;
-};
-
 const getNotificationFromStorage = (id: string): NotificationSettings => {
   try {
     const data = localStorage.getItem(`match_notifications_${id}`);
@@ -289,10 +229,19 @@ const showWebNotification = (title: string, options: NotificationOptions) => {
 };
 
 // Turnuva logosu için url önceliği: http/https ile başlıyorsa onu kullan, yoksa local events, yoksa default
+const getTeamLogo = (teamName: string) => {
+  if (!teamName) return '/logos/default.png';
+  const normalizedName = normalize(teamName);
+  return `/logos/${normalizedName}.png`;
+};
+
 const getTournamentLogo = (match: Match) => {
   const tName = match.tournament_name || match.match_event || '';
+  if (!tName) return '/events/default-tournament-logo.png';
+  
   const normalizedName = normalize(tName);
   const logoPath = `/events/processed/${normalizedName}.png`;
+  
   return logoPath;
 };
 
@@ -381,7 +330,8 @@ const Matches: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
-  const [unreadNotifications, setUnreadNotifications] = useState<number>(0);
+  const [selectedRawDate, setSelectedRawDate] = useState<string>('');
+  const { notifications, setNotifications } = useNotifications();
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
     enabled: false,
     beforeMatch: 15,
@@ -389,26 +339,11 @@ const Matches: React.FC = () => {
     matchEnd: true,
     scoreUpdate: true,
   });
-  const [selectedRawDate, setSelectedRawDate] = useState<string>('');
-  const { notifications, setNotifications } = useNotifications();
-
-  // Bildirim sayısını güncelle
-  const updateNotificationCount = useCallback(() => {
-    const count = matches.filter(match => 
-      match.notifications?.enabled && 
-      !match.time_completed && 
-      match.time_until_match !== 'LIVE'
-    ).length;
-    setUnreadNotifications(count);
-  }, [matches]);
-
-  useEffect(() => {
-    updateNotificationCount();
-  }, [matches, updateNotificationCount]);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchMatches = async () => {
-    setLoading(true);
+      setLoading(true);
       try {
         let response;
         // Sadece 'past' sekmesinde tarih parametresi gönder
@@ -432,8 +367,6 @@ const Matches: React.FC = () => {
               dateToSend = new Date(selectedDate as any);
             }
             params.date = formatDate(dateToSend, 'yyyy-MM-dd');
-            console.log('DatePicker value:', selectedDate);
-            console.log('Backend\'e gönderilen:', params.date);
           }
         }
         switch (filter) {
@@ -444,53 +377,27 @@ const Matches: React.FC = () => {
             response = await matchService.getMatches({ status: 'upcoming' });
             break;
           case 'past':
-            response = await matchService.getMatches({ ...params, status: 'past' });
+            response = await matchService.getMatches({ ...params, status: 'completed' });
             break;
           default:
             response = await matchService.getMatches();
         }
 
-        // API'den gelen cevabı konsola yazdır
-        console.log('API response:', response);
-
         if (!response || response.length === 0) {
           toast.info('Seçili kriterlere uygun maç bulunamadı.');
         }
 
-        const matchesWithLogos = response.map((match: Match) => {
+        const matchesWithLogos = response.map((match: any): Match => {
           let matchDate: Date | null = null;
           if (match.parsed_date) {
             matchDate = new Date(match.parsed_date);
           } else if (match.date) {
             matchDate = new Date(match.date);
-          } else if (match.time_until_match && match.time_until_match !== 'LIVE') {
-            matchDate = new Date(match.time_until_match);
-          } else if (match.time_completed) {
-            matchDate = new Date(match.time_completed);
-          }
-          if (matchDate && isNaN(matchDate.getTime())) {
-            matchDate = null;
           }
 
-          // Takım logoları için normalize edilmiş isimle hem .png hem .svg dene
-          const team1LogoPng = match.team1 ? '/logos/' + normalize(match.team1) + '.png' : null;
-          const team1LogoSvg = match.team1 ? '/logos/' + normalize(match.team1) + '.svg' : null;
-          const team2LogoPng = match.team2 ? '/logos/' + normalize(match.team2) + '.png' : null;
-          const team2LogoSvg = match.team2 ? '/logos/' + normalize(match.team2) + '.svg' : null;
-
-          // Turnuva logosu için sadece normalize edilmiş .png yolunu kullan
-          const tournamentLogoName = match.tournament_name
-            ? `/events/${normalize(match.tournament_name)}.png`
-            : '/events/default-tournament-logo.png';
-
-          const tournamentIcon = match.tournament_icon
-            || match.tournamentIcon
-            || tournamentLogoName
-            || DEFAULT_TOURNAMENT_LOGO;
-
-          // Benzersiz anahtar oluştur
-          const uniqueKey = `${match.id}_${match.team1}_${match.team2}_${match.tournament_name || match.match_event}`;
+          const uniqueKey = `${match.id}_${match.team1}_${match.team2}`;
           let notifications: NotificationSettings;
+
           if (match.notifications) {
             notifications = {
               enabled: match.notifications.enabled === true,
@@ -513,6 +420,21 @@ const Matches: React.FC = () => {
             status = 'upcoming';
           }
 
+          // Takım logoları için normalize edilmiş isimle hem .png hem .svg dene
+          const team1LogoPng = match.team1 ? `/logos/${normalize(match.team1)}.png` : null;
+          const team1LogoSvg = match.team1 ? `/logos/${normalize(match.team1)}.svg` : null;
+          const team2LogoPng = match.team2 ? `/logos/${normalize(match.team2)}.png` : null;
+          const team2LogoSvg = match.team2 ? `/logos/${normalize(match.team2)}.svg` : null;
+
+          // Turnuva logosu için processed klasörünü kullan
+          const tournamentLogoName = match.tournament_name
+            ? `/events/processed/${normalize(match.tournament_name)}.png`
+            : '/events/default-tournament-logo.png';
+
+          const tournamentIcon = match.tournament_icon
+            || match.tournamentIcon
+            || tournamentLogoName;
+
           return {
             ...match,
             team1LogoPng,
@@ -520,7 +442,7 @@ const Matches: React.FC = () => {
             team2LogoPng,
             team2LogoSvg,
             tournamentIcon,
-            date: matchDate,
+            date: matchDate || new Date(),
             notifications,
             status,
           };
@@ -591,18 +513,6 @@ const Matches: React.FC = () => {
     const interval = setInterval(checkMatchStatus, 30000); // Her 30 saniyede bir kontrol et
     return () => clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    if (matches.length > 0 && selectedDate) {
-      console.log('Seçilen:', formatDate(selectedDate, 'yyyy-MM-dd'));
-      matches.forEach(m => {
-        if (m.date) {
-          const matchDateObj = new Date(m.date);
-          console.log('Maç:', formatDate(matchDateObj, 'yyyy-MM-dd'), m);
-        }
-      });
-    }
-  }, [matches, selectedDate]);
 
   const getStatusChip = useCallback((match: Match) => {
     if (match.time_until_match === 'LIVE') {
@@ -733,6 +643,15 @@ const Matches: React.FC = () => {
           body: `${selectedMatch.team1} ile ${selectedMatch.team2} arasındaki maç için bildirimleri açtın. Heyecanı kaçırma!`,
           icon: '/notification-icon.png'
         });
+
+        dispatch(addNotification({
+          id: uniqueKey,
+          title: `${selectedMatch.team1} vs ${selectedMatch.team2}`,
+          message: randomMessage,
+          type: 'matchStart',
+          read: false,
+          timestamp: new Date().toISOString(),
+        }));
       } else {
         // Bildirim kapatılıyorsa mesajı ve zamanı sil
         const messageKey = `match_notification_message_${uniqueKey}`;
@@ -1015,7 +934,7 @@ const Matches: React.FC = () => {
                                   borderRadius: '50%'
                                 }}>
                                   <img
-                                    src={match.team1LogoPng || match.team1LogoSvg || match.team1_logo_url || '/logos/default.png'}
+                                    src={getTeamLogo(match.team1)}
                                     alt={match.team1}
                                     style={{
                                       width: 36,
@@ -1108,7 +1027,7 @@ const Matches: React.FC = () => {
                                   borderRadius: '50%'
                                 }}>
                                   <img
-                                    src={match.team2LogoPng || match.team2LogoSvg || match.team2_logo_url || '/logos/default.png'}
+                                    src={getTeamLogo(match.team2)}
                                     alt={match.team2}
                                     style={{
                                       width: 36,

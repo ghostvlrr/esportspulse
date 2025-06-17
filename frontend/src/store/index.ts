@@ -1,21 +1,21 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './slices/authSlice';
+import notificationReducer from './slices/notificationSlice';
 import matchReducer from './slices/matchSlice';
 import teamReducer from './slices/teamSlice';
 import newsReducer from './slices/newsSlice';
 import userReducer from './slices/userSlice';
-import notificationReducer from './slices/notificationSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { TypedUseSelectorHook } from 'react-redux';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
+    notifications: notificationReducer,
     matches: matchReducer,
     teams: teamReducer,
     news: newsReducer,
     user: userReducer,
-    notifications: notificationReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

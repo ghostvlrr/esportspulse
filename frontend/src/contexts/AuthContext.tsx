@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
-interface User {
-  id: string;
-  email: string;
-  username: string;
-  avatar?: string;
+export interface User {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
 }
 
 interface AuthContextType {
@@ -28,10 +28,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = useCallback(async (email: string, password: string) => {
     // Demo kullanıcı
     const demoUser: User = {
-      id: '1',
+      uid: '1',
       email: 'demo@example.com',
-      username: 'demo',
-      avatar: 'https://via.placeholder.com/150'
+      displayName: 'Demo User',
+      photoURL: 'https://via.placeholder.com/150'
     };
 
     setUser(demoUser);

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
-import { markAsRead, removeNotification, NotificationItem } from '../store/slices/notificationSlice';
+import { markAsRead, removeNotification } from '../store/slices/notificationSlice';
+import { NotificationItem, NotificationType } from '../types/notification';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import {
@@ -10,29 +11,41 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListItemAvatar,
-  Avatar,
   IconButton,
   Box,
-  Paper,
-  useTheme,
-  alpha,
+  Button,
   Chip,
+  Divider,
+  Paper,
+  Alert,
+  AlertTitle,
   Stack,
-  Tooltip,
-  Fade,
-  Button
+  Pagination,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  useTheme,
+  alpha
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import ScoreboardIcon from '@mui/icons-material/Scoreboard';
-import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
-import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import InfoIcon from '@mui/icons-material/Info';
+import WarningIcon from '@mui/icons-material/Warning';
+import ErrorIcon from '@mui/icons-material/Error';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
+import { useTheme as useMuiTheme } from '../contexts/ThemeContext';
+import { useNotifications } from '../hooks/useNotifications';
+import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { useQuery } from 'react-query';
+import { getNotifications } from '../services/notificationService';
+import { Notification } from '../types/notification';
+import { Card, CardContent, Avatar } from '@mui/material';
+import { Close as CloseIcon, Check as CheckIcon } from '@mui/icons-material';
 
 // Bildirim mesaj havuzları
 const finalMessages = [
@@ -83,11 +96,10 @@ function getImportanceMessage(round: string, team1: string, team2: string) {
 const Notifications: React.FC = () => {
   const theme = useTheme();
   const dispatch = useDispatch();
-  const notifications = useSelector((state: RootState) => state.notifications.notifications);
-  const [filteredNotifications, setFilteredNotifications] = useState<NotificationItem[]>([]);
-  const [filter, setFilter] = useState<'all' | 'unread'>('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 3;
+  const { notifications, unreadCount } = useSelector((state: RootState) => state.notifications);
+  const [page, setPage] = useState(1);
+  const [filter, setFilter] = useState<'all' | 'unread' | 'live'>('all');
+  const itemsPerPage = 10;
   const [showSuccess, setShowSuccess] = useState(false);
 
   // Maç bildirimleri için localStorage'dan kontrol
@@ -111,7 +123,7 @@ const Notifications: React.FC = () => {
               const messageKey = `match_notification_message_${uniqueKey}`;
               const timeKey = `match_notification_time_${uniqueKey}`;
               const savedTime = localStorage.getItem(timeKey);
-              const timestamp = savedTime ? new Date(savedTime) : new Date();
+              const timestamp = savedTime ? new Date(savedTime).toISOString() : new Date().toISOString();
               const savedMessage = localStorage.getItem(messageKey);
               matchNotificationMessage = savedMessage || getImportanceMessage(round, team1, team2);
               matchNotificationItem = {
@@ -130,90 +142,91 @@ const Notifications: React.FC = () => {
     }
   }
 
-  useEffect(() => {
-    setCurrentPage(1); // Bildirimler veya filtre değişince baştan başla
-    let notifs = notifications;
-    if (filter === 'all') {
-      // Sadece canlı ve yaklaşan maçlar (kesin filtre)
-      notifs = notifications.filter(
-        n => n.type === 'matchStart' || n.type === 'scoreChange'
-      );
-    } else if (filter === 'unread') {
-      notifs = notifications.filter(n => !n.read && (n.type === 'matchStart' || n.type === 'scoreChange'));
-    }
-    if (matchNotificationItem) {
-      notifs = [matchNotificationItem, ...notifs];
-    }
-    setFilteredNotifications(notifs);
-  }, [notifications, filter, matchNotificationItem]);
+  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+    setPage(value);
+  };
 
-  const pagedNotifications = filteredNotifications.slice(0, currentPage * pageSize);
-  const hasMore = filteredNotifications.length > pagedNotifications.length;
+  const handleFilterChange = (event: any) => {
+    setFilter(event.target.value);
+    setPage(1);
+  };
 
-  const handleDelete = (id: string) => {
+  const handleMarkAsRead = (id: string) => {
+    dispatch(markAsRead(id));
+  };
+
+  const handleRemoveNotification = (id: string) => {
     dispatch(removeNotification(id));
-    // Eğer localStorage'da maç bildirimi ise onu da sil
-    if (id.startsWith('local_')) {
-      // id: local_team1_team2
-      const parts = id.split('_');
-      if (parts.length >= 3) {
-        // Tüm olası anahtarları kontrol et ve sil
-        Object.keys(localStorage).forEach(key => {
-          if (key.startsWith('match_notifications_') || 
-              key.startsWith('match_notification_message_') || 
-              key.startsWith('match_notification_time_')) {
-            if (key.includes(parts[1]) && key.includes(parts[2])) {
-              localStorage.removeItem(key);
-            }
-          }
-        });
+  };
+
+  const handleClearAll = () => {
+    notifications.forEach(notification => {
+      dispatch(removeNotification(notification.id));
+    });
+    // LocalStorage'daki tüm maç bildirimlerini sil
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('match_notifications_') || 
+          key.startsWith('match_notification_message_') || 
+          key.startsWith('match_notification_time_')) {
+        localStorage.removeItem(key);
       }
-    }
+    });
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 2000);
     // Başarı mesajı göster
-    toast.success('Bildirim başarıyla silindi');
+    toast.success('Tüm bildirimler başarıyla kapatıldı');
   };
 
-  const getNotificationIcon = (type: NotificationItem['type']) => {
+  let filteredNotifications = [...notifications];
+  if (filter === 'live') {
+    filteredNotifications = notifications.filter(
+      n => ['matchStart', 'scoreChange', 'matchEnd'].includes(n.type)
+    );
+  } else if (filter === 'unread') {
+    filteredNotifications = notifications.filter(n => !n.read && ['matchStart', 'scoreChange', 'matchEnd'].includes(n.type));
+  }
+
+  const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage);
+  const startIndex = (page - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentNotifications = filteredNotifications.slice(startIndex, endIndex);
+
+  const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
       case 'matchStart':
+      case 'scoreChange':
+      case 'matchEnd':
         return <SportsEsportsIcon />;
-      case 'scoreChange':
-        return <ScoreboardIcon />;
-      case 'matchEnd':
-        return <EmojiEventsIcon />;
       case 'news':
-        return <NotificationsActiveIcon />;
+        return <InfoIcon />;
+      case 'system':
+        return <WarningIcon />;
+      case 'error':
+        return <ErrorIcon />;
+      case 'success':
+        return <CheckCircleIcon />;
       default:
-        return <SettingsIcon />;
+        return <NotificationsIcon />;
     }
   };
 
-  const getNotificationColor = (type: NotificationItem['type']) => {
+  const getNotificationColor = (type: NotificationType) => {
     switch (type) {
       case 'matchStart':
-        return theme.palette.primary.main;
       case 'scoreChange':
-        return theme.palette.warning.main;
       case 'matchEnd':
-        return theme.palette.success.main;
+        return 'info';
       case 'news':
-        return theme.palette.info.main;
+        return 'success';
+      case 'system':
+        return 'warning';
+      case 'error':
+        return 'error';
+      case 'success':
+        return 'success';
       default:
-        return theme.palette.grey[500];
+        return 'info';
     }
-  };
-
-  const getNotificationStyle = (type: NotificationItem['type'], read: boolean) => {
-    const color = getNotificationColor(type);
-    return {
-      backgroundColor: alpha(color, read ? 0.05 : 0.1),
-      borderLeft: `4px solid ${color}`,
-      transition: 'all 0.3s ease',
-      '&:hover': {
-        backgroundColor: alpha(color, read ? 0.1 : 0.15),
-        transform: 'translateX(4px)',
-      }
-    };
   };
 
   const getNotificationMessage = (notification: NotificationItem) => {
@@ -231,241 +244,143 @@ const Notifications: React.FC = () => {
     }
   };
 
-  const handleFilterChange = (newFilter: 'all' | 'unread') => {
-    setFilter(newFilter);
-    if (newFilter === 'all') {
-      setFilteredNotifications(notifications);
-    } else {
-      setFilteredNotifications(notifications.filter(n => !n.read));
-    }
-  };
-
-  // Tüm bildirimleri kapat fonksiyonu (Matches.tsx'den de çağrılabilir)
-  const handleCloseAllNotifications = () => {
-    // LocalStorage'daki tüm maç bildirimlerini sil
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith('match_notifications_') || 
-          key.startsWith('match_notification_message_') || 
-          key.startsWith('match_notification_time_')) {
-        localStorage.removeItem(key);
-      }
-    });
-    // Redux store'daki bildirimleri temizle
-    dispatch({ type: 'notifications/clearAll' });
-    setFilteredNotifications([]);
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 2000);
-    // Başarı mesajı göster
-    toast.success('Tüm bildirimler başarıyla kapatıldı');
-  };
-
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* {matchNotificationMessage && (
-        <Box sx={{ mb: 2, p: 2, background: 'rgba(255,0,0,0.08)', borderRadius: 2, textAlign: 'center', fontWeight: 600, color: '#FF0000', fontSize: 18 }}>
-          {matchNotificationMessage}
-        </Box>
-      )} */}
-      <Paper 
-        elevation={0}
-        sx={{
-          p: 3,
-          borderRadius: 2,
-          background: 'linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,0.1)'
-        }}
-      >
-        {showSuccess && (
-          <Box sx={{ mb: 2, p: 2, background: 'rgba(0,200,0,0.12)', borderRadius: 2, textAlign: 'center', fontWeight: 600, color: '#1db954', fontSize: 18 }}>
-            Tüm bildirimler başarıyla kapatıldı!
-          </Box>
-        )}
-        <Box sx={{ mb: 4 }}>
-          <Typography 
-            variant="h4" 
-            sx={{ 
-              mb: 2,
-              fontWeight: 700,
-              background: 'linear-gradient(45deg, #FF0000 30%, #171717 90%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
-            }}
-          >
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="h4" component="h1" gutterBottom>
             Bildirimler
-          </Typography>
-          
-          <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+          {unreadCount > 0 && (
             <Chip
-              icon={<NotificationsIcon />}
-              label="Tümü"
-              onClick={() => handleFilterChange('all')}
-              color={filter === 'all' ? 'primary' : 'default'}
-              variant={filter === 'all' ? 'filled' : 'outlined'}
-              sx={{ 
-                borderRadius: 2,
-                background: filter === 'all' ? 'rgba(255,0,0,0.1)' : undefined,
-                color: filter === 'all' ? '#FF0000' : undefined,
-                '&:hover': {
-                  backgroundColor: 'rgba(255,0,0,0.1)'
-                }
-              }}
+              label={`${unreadCount} yeni`}
+              color="primary"
+              size="small"
+              sx={{ ml: 2 }}
             />
-            <Chip
-              icon={<NotificationsActiveIcon />}
-              label="Okunmamış"
-              onClick={() => handleFilterChange('unread')}
-              color={filter === 'unread' ? 'primary' : 'default'}
-              variant={filter === 'unread' ? 'filled' : 'outlined'}
-              sx={{ 
-                borderRadius: 2,
-                background: filter === 'unread' ? 'rgba(255,0,0,0.1)' : undefined,
-                color: filter === 'unread' ? '#FF0000' : undefined,
-                '&:hover': {
-                  backgroundColor: 'rgba(255,0,0,0.1)'
-                }
-              }}
-            />
-          </Stack>
-        </Box>
-
-        <AnimatePresence>
-          {pagedNotifications.length > 0 ? (
-            <List sx={{ p: 0 }}>
-              {pagedNotifications.map((notification) => (
-                <motion.div
-                  key={notification.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <ListItem
-                    sx={{
-                      ...getNotificationStyle(notification.type, notification.read),
-                      mb: 2,
-                      borderRadius: 2,
-                      p: 2,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <ListItemAvatar>
-                        <Avatar
-                          sx={{
-                            bgcolor: alpha(getNotificationColor(notification.type), 0.2),
-                            color: getNotificationColor(notification.type)
-                          }}
-                        >
-                          {getNotificationIcon(notification.type)}
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={
-                          <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                            {notification.title}
-                          </Typography>
-                        }
-                        secondary={
-                          <>
-                            <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-                              {getNotificationMessage(notification)}
-                            </Typography>
-                            <Typography variant="caption" sx={{ color: 'text.disabled', display: 'block', mt: 1 }}>
-                              {notification.timestamp ? format(new Date(notification.timestamp), 'dd MMMM yyyy HH:mm', { locale: tr }) : ''}
-                            </Typography>
-                          </>
-                        }
-                      />
-                    </Box>
-                    <Tooltip title="Bildirimi sil">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDelete(notification.id)}
-                        sx={{
-                          color: theme.palette.error.main,
-                          '&:hover': {
-                            backgroundColor: alpha(theme.palette.error.main, 0.1)
-                          }
-                        }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </ListItem>
-                </motion.div>
-              ))}
-            </List>
-          ) : (
-            <Fade in>
-              <Box
-                sx={{
-                  textAlign: 'center',
-                  py: 8,
-                  px: 2
-                }}
-              >
-                <NotificationsIcon
-                  sx={{
-                    fontSize: 64,
-                    color: 'text.disabled',
-                    mb: 2
-                  }}
-                />
-                <Typography variant="h6" sx={{ color: 'text.primary', mb: 1 }}>
-                  Henüz bildiriminiz yok
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  Favori takımlarınızın maçları veya önemli haberler için bildirimler burada görünecek.
-                </Typography>
-              </Box>
-            </Fade>
           )}
-        </AnimatePresence>
-        {hasMore && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-            <button
-              style={{
-                background: '#FF0000',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 8,
-                padding: '8px 24px',
-                fontWeight: 600,
-                fontSize: 16,
-                cursor: 'pointer',
-                boxShadow: '0 2px 8px rgba(255,0,0,0.08)',
-                transition: 'background 0.2s'
-              }}
-              onClick={() => setCurrentPage((p) => p + 1)}
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Filtrele</InputLabel>
+            <Select
+              value={filter}
+              label="Filtrele"
+              onChange={handleFilterChange}
             >
-              Daha Fazla Göster
-            </button>
-          </Box>
-        )}
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+              <MenuItem value="all">Tümü</MenuItem>
+              <MenuItem value="unread">Okunmamış</MenuItem>
+              <MenuItem value="live">Canlı Maçlar</MenuItem>
+            </Select>
+          </FormControl>
           <Button
-            variant="contained"
+            variant="outlined"
             color="error"
-            onClick={handleCloseAllNotifications}
-            sx={{
-              borderRadius: 2,
-              px: 4,
-              py: 1.5,
-              fontWeight: 700,
-              fontSize: 16,
-              boxShadow: '0 2px 8px rgba(255,0,0,0.08)',
-              textTransform: 'none',
-              mt: 1
-            }}
-            startIcon={<NotificationsOffIcon />}
+            onClick={handleClearAll}
+            startIcon={<DeleteIcon />}
           >
-            Tüm Bildirimleri Kapat
+            Tümünü Temizle
           </Button>
         </Box>
-      </Paper>
+      </Box>
+
+      {currentNotifications.length === 0 ? (
+        <Alert severity="info" sx={{ mt: 2 }}>
+          <AlertTitle>Bildirim Yok</AlertTitle>
+          Henüz hiç bildiriminiz bulunmuyor.
+        </Alert>
+      ) : (
+        <List>
+          {currentNotifications.map((notification) => (
+            <Paper
+              key={notification.id}
+              elevation={1}
+              sx={{ 
+                mb: 2,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: 3,
+                },
+              }}
+                >
+                  <ListItem
+                alignItems="flex-start"
+                    sx={{
+                  bgcolor: notification.read ? 'transparent' : 'action.hover',
+                  position: 'relative',
+                    }}
+                  >
+                <ListItemText
+                  primary={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {getNotificationIcon(notification.type)}
+                      <Typography
+                        component="span"
+                        variant="subtitle1"
+                        color="text.primary"
+                        sx={{ fontWeight: notification.read ? 'normal' : 'bold' }}
+                      >
+                          {notification.title}
+                        </Typography>
+                      {!notification.read && (
+                        <Chip
+                          label="Yeni"
+                          color="primary"
+                          size="small"
+                          sx={{ ml: 1 }}
+                        />
+                      )}
+                    </Box>
+                      }
+                      secondary={
+                        <>
+                      <Typography
+                        component="span"
+                        variant="body2"
+                        color="text.primary"
+                        sx={{ display: 'block', mt: 1 }}
+                      >
+                            {getNotificationMessage(notification)}
+                          </Typography>
+                        </>
+                      }
+                    />
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                      {!notification.read && (
+                    <Button
+                            size="small"
+                            onClick={() => handleMarkAsRead(notification.id)}
+                      sx={{ minWidth: 'auto' }}
+                          >
+                      Okundu
+                    </Button>
+                      )}
+                        <IconButton
+                    edge="end"
+                    aria-label="delete"
+                    onClick={() => handleRemoveNotification(notification.id)}
+                          size="small"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                </Box>
+                  </ListItem>
+            </Paper>
+              ))}
+            </List>
+      )}
+
+      {totalPages > 1 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <Pagination
+            count={totalPages}
+            page={page}
+            onChange={handlePageChange}
+            color="primary"
+            showFirstButton
+            showLastButton
+          />
+              </Box>
+          )}
     </Container>
   );
 };

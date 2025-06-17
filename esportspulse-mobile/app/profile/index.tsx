@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, Image } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
@@ -41,126 +41,149 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <ScrollView>
-        <View style={styles.header}>
-          <View style={[styles.avatarContainer, { backgroundColor: theme.colors.surface }]}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={[styles.header, { backgroundColor: theme.colors.primary + '10' }]}>
+          <View style={[styles.avatarContainer, { backgroundColor: theme.colors.primary + '20' }]}>
             <Ionicons name="person" size={48} color={theme.colors.primary} />
           </View>
           <Text style={[styles.username, { color: theme.colors.text }]}>{user.username}</Text>
-          <Text style={[styles.email, { color: theme.colors.text }]}>{user.email}</Text>
+          <Text style={[styles.email, { color: theme.colors.text, opacity: 0.7 }]}>{user.email}</Text>
         </View>
 
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Favorilerim</Text>
-          
-          <View style={styles.favoritesContainer}>
-            <TouchableOpacity 
-              style={[styles.favoriteItem, { backgroundColor: theme.colors.surface }]}
-              onPress={() => router.push('/favorites')}
-            >
-              <Ionicons name="heart" size={24} color={theme.colors.primary} />
-              <Text style={[styles.favoriteText, { color: theme.colors.text }]}>Favori Takımlar</Text>
-              <Text style={[styles.favoriteCount, { color: theme.colors.text }]}>
-                {user.favoriteTeams.length}
-              </Text>
-            </TouchableOpacity>
+        <View style={styles.content}>
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Favorilerim</Text>
+            
+            <View style={styles.favoritesContainer}>
+              <TouchableOpacity 
+                style={[styles.favoriteItem, { backgroundColor: theme.colors.primary + '10' }]}
+                onPress={() => router.push('/favorites')}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.favoriteIconContainer, { backgroundColor: theme.colors.primary + '20' }]}>
+                  <Ionicons name="heart" size={24} color={theme.colors.primary} />
+                </View>
+                <View style={styles.favoriteContent}>
+                  <Text style={[styles.favoriteText, { color: theme.colors.text }]}>Favori Takımlar</Text>
+                  <Text style={[styles.favoriteCount, { color: theme.colors.primary }]}>
+                    {user.favoriteTeams.length} takım
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={24} color={theme.colors.text} style={{ opacity: 0.5 }} />
+              </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.favoriteItem, { backgroundColor: theme.colors.surface }]}
-              onPress={() => router.push('/favorites')}
-            >
-              <Ionicons name="person" size={24} color={theme.colors.primary} />
-              <Text style={[styles.favoriteText, { color: theme.colors.text }]}>Favori Oyuncular</Text>
-              <Text style={[styles.favoriteCount, { color: theme.colors.text }]}>
-                {user.favoritePlayers.length}
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.favoriteItem, { backgroundColor: theme.colors.primary + '10' }]}
+                onPress={() => router.push('/favorites')}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.favoriteIconContainer, { backgroundColor: theme.colors.primary + '20' }]}>
+                  <Ionicons name="person" size={24} color={theme.colors.primary} />
+                </View>
+                <View style={styles.favoriteContent}>
+                  <Text style={[styles.favoriteText, { color: theme.colors.text }]}>Favori Oyuncular</Text>
+                  <Text style={[styles.favoriteCount, { color: theme.colors.primary }]}>
+                    {user.favoritePlayers.length} oyuncu
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={24} color={theme.colors.text} style={{ opacity: 0.5 }} />
+              </TouchableOpacity>
+            </View>
           </View>
+
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Bildirim Ayarları</Text>
+            
+            <View style={[styles.preferenceItem, { backgroundColor: theme.colors.primary + '10' }]}>
+              <View style={styles.preferenceText}>
+                <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
+                  Maç Başlangıç Bildirimleri
+                </Text>
+                <Text style={[styles.preferenceDescription, { color: theme.colors.text, opacity: 0.7 }]}>
+                  Maç başlangıç bildirimleri
+                </Text>
+              </View>
+              <TouchableOpacity 
+                onPress={() => toggleNotification('matchStart')}
+                style={[styles.toggleButton, { backgroundColor: user.notifications.matchStart ? theme.colors.primary : theme.colors.text + '40' }]}
+              >
+                <View style={[styles.toggleKnob, { 
+                  backgroundColor: 'white',
+                  transform: [{ translateX: user.notifications.matchStart ? 20 : 0 }]
+                }]} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={[styles.preferenceItem, { backgroundColor: theme.colors.primary + '10' }]}>
+              <View style={styles.preferenceText}>
+                <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
+                  Skor Değişikliği Bildirimleri
+                </Text>
+                <Text style={[styles.preferenceDescription, { color: theme.colors.text, opacity: 0.7 }]}>
+                  Canlı maç skor değişiklikleri
+                </Text>
+              </View>
+              <TouchableOpacity 
+                onPress={() => toggleNotification('scoreChange')}
+                style={[styles.toggleButton, { backgroundColor: user.notifications.scoreChange ? theme.colors.primary : theme.colors.text + '40' }]}
+              >
+                <View style={[styles.toggleKnob, { 
+                  backgroundColor: 'white',
+                  transform: [{ translateX: user.notifications.scoreChange ? 20 : 0 }]
+                }]} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={[styles.preferenceItem, { backgroundColor: theme.colors.primary + '10' }]}>
+              <View style={styles.preferenceText}>
+                <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
+                  Maç Sonu Bildirimleri
+                </Text>
+                <Text style={[styles.preferenceDescription, { color: theme.colors.text, opacity: 0.7 }]}>
+                  Maç sonuç bildirimleri
+                </Text>
+              </View>
+              <TouchableOpacity 
+                onPress={() => toggleNotification('matchEnd')}
+                style={[styles.toggleButton, { backgroundColor: user.notifications.matchEnd ? theme.colors.primary : theme.colors.text + '40' }]}
+              >
+                <View style={[styles.toggleKnob, { 
+                  backgroundColor: 'white',
+                  transform: [{ translateX: user.notifications.matchEnd ? 20 : 0 }]
+                }]} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={[styles.preferenceItem, { backgroundColor: theme.colors.primary + '10' }]}>
+              <View style={styles.preferenceText}>
+                <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
+                  Haber Bildirimleri
+                </Text>
+                <Text style={[styles.preferenceDescription, { color: theme.colors.text, opacity: 0.7 }]}>
+                  Önemli haberler ve güncellemeler
+                </Text>
+              </View>
+              <TouchableOpacity 
+                onPress={() => toggleNotification('news')}
+                style={[styles.toggleButton, { backgroundColor: user.notifications.news ? theme.colors.primary : theme.colors.text + '40' }]}
+              >
+                <View style={[styles.toggleKnob, { 
+                  backgroundColor: 'white',
+                  transform: [{ translateX: user.notifications.news ? 20 : 0 }]
+                }]} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.logoutButton, { backgroundColor: theme.colors.error + '20' }]}
+            onPress={handleLogout}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="log-out" size={24} color={theme.colors.error} />
+            <Text style={[styles.logoutText, { color: theme.colors.error }]}>Çıkış Yap</Text>
+          </TouchableOpacity>
         </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Bildirim Ayarları</Text>
-          
-          <View style={[styles.preferenceItem, { backgroundColor: theme.colors.surface }]}>
-            <View style={styles.preferenceText}>
-              <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
-                Maç Başlangıç Bildirimleri
-              </Text>
-              <Text style={[styles.preferenceDescription, { color: theme.colors.text }]}>
-                Maç başlangıç bildirimleri
-              </Text>
-            </View>
-            <TouchableOpacity onPress={() => toggleNotification('matchStart')}>
-              <Ionicons
-                name={user.notifications.matchStart ? 'notifications' : 'notifications-off'}
-                size={24}
-                color={user.notifications.matchStart ? theme.colors.primary : theme.colors.text}
-              />
-            </TouchableOpacity>
-          </View>
-
-          <View style={[styles.preferenceItem, { backgroundColor: theme.colors.surface }]}>
-            <View style={styles.preferenceText}>
-              <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
-                Skor Değişikliği Bildirimleri
-              </Text>
-              <Text style={[styles.preferenceDescription, { color: theme.colors.text }]}>
-                Canlı maç skor değişiklikleri
-              </Text>
-            </View>
-            <TouchableOpacity onPress={() => toggleNotification('scoreChange')}>
-              <Ionicons
-                name={user.notifications.scoreChange ? 'notifications' : 'notifications-off'}
-                size={24}
-                color={user.notifications.scoreChange ? theme.colors.primary : theme.colors.text}
-              />
-            </TouchableOpacity>
-          </View>
-
-          <View style={[styles.preferenceItem, { backgroundColor: theme.colors.surface }]}>
-            <View style={styles.preferenceText}>
-              <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
-                Maç Sonu Bildirimleri
-              </Text>
-              <Text style={[styles.preferenceDescription, { color: theme.colors.text }]}>
-                Maç sonuç bildirimleri
-              </Text>
-            </View>
-            <TouchableOpacity onPress={() => toggleNotification('matchEnd')}>
-              <Ionicons
-                name={user.notifications.matchEnd ? 'notifications' : 'notifications-off'}
-                size={24}
-                color={user.notifications.matchEnd ? theme.colors.primary : theme.colors.text}
-              />
-            </TouchableOpacity>
-          </View>
-
-          <View style={[styles.preferenceItem, { backgroundColor: theme.colors.surface }]}>
-            <View style={styles.preferenceText}>
-              <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
-                Haber Bildirimleri
-              </Text>
-              <Text style={[styles.preferenceDescription, { color: theme.colors.text }]}>
-                Önemli haberler ve güncellemeler
-              </Text>
-            </View>
-            <TouchableOpacity onPress={() => toggleNotification('news')}>
-              <Ionicons
-                name={user.notifications.news ? 'notifications' : 'notifications-off'}
-                size={24}
-                color={user.notifications.news ? theme.colors.primary : theme.colors.text}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={[styles.logoutButton, { backgroundColor: theme.colors.error }]}
-          onPress={handleLogout}
-        >
-          <Ionicons name="log-out" size={24} color="white" />
-          <Text style={styles.logoutText}>Çıkış Yap</Text>
-        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -173,6 +196,8 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     padding: 32,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   avatarContainer: {
     width: 120,
@@ -181,17 +206,24 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   username: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 4,
   },
   email: {
     fontSize: 16,
   },
-  section: {
+  content: {
     padding: 16,
+  },
+  section: {
+    marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 20,
@@ -205,24 +237,42 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  favoriteIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  favoriteContent: {
+    flex: 1,
+    marginLeft: 16,
   },
   favoriteText: {
-    flex: 1,
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 12,
+    marginBottom: 4,
   },
   favoriteCount: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
   },
   preferenceItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   preferenceText: {
     flex: 1,
@@ -236,17 +286,35 @@ const styles = StyleSheet.create({
   preferenceDescription: {
     fontSize: 14,
   },
+  toggleButton: {
+    width: 44,
+    height: 24,
+    borderRadius: 12,
+    padding: 2,
+  },
+  toggleKnob: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     margin: 16,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     gap: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   logoutText: {
-    color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },

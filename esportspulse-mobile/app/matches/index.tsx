@@ -1,36 +1,28 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, SafeAreaView, ActivityIndicator } from 'react-native';
-import { useTheme } from '@react-navigation/native';
-import { apiService } from '@/services/api';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, SafeAreaView, ActivityIndicator, ScrollView } from 'react-native';
+import { useTheme } from '@/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
-import { ENDPOINTS } from '@/constants/ApiConfig';
-import { getMatches, getLiveMatches, getUpcomingMatches, getCompletedMatches } from '../../services/api';
-import { Match } from '../../types/match';
-import { formatDate } from '../../utils/dateUtils';
+import { getUpcomingMatches, getLiveMatches, getCompletedMatches } from '@/services/vlrApi';
 import { teamLogos } from '../../assets/logos';
-
-interface Match {
-  id: string;
-  homeTeam: string;
-  awayTeam: string;
-  score: string;
-  status: string;
-  date: string;
-  tournament: string;
-  homeTeamLogo: string;
-  awayTeamLogo: string;
-  matchPage: string;
-  timeUntil: string;
-}
 
 const DEFAULT_TEAM_LOGO = require('../../assets/logos/default.png');
 
+function normalizeTeamName(name: string) {
+  return name?.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+const FILTERS = [
+  { key: 'upcoming', label: 'Yaklaşan', fetch: getUpcomingMatches },
+  { key: 'live', label: 'Canlı', fetch: getLiveMatches },
+  { key: 'completed', label: 'Tamamlanan', fetch: getCompletedMatches },
+];
+
 export default function MatchesScreen() {
-  const theme = useTheme();
-  const [matches, setMatches] = React.useState<Match[]>([]);
+  const { theme } = useTheme();
+  const [matches, setMatches] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
-  const [selectedFilter, setSelectedFilter] = React.useState('all');
+  const [selectedFilter, setSelectedFilter] = React.useState('upcoming');
   const router = useRouter();
 
   React.useEffect(() => {
@@ -38,28 +30,11 @@ export default function MatchesScreen() {
   }, [selectedFilter]);
 
   const fetchMatches = async () => {
+    setLoading(true);
     try {
-      let endpoint = ENDPOINTS.upcoming;
-      if (selectedFilter === 'live') endpoint = ENDPOINTS.live;
-      else if (selectedFilter === 'completed') endpoint = ENDPOINTS.completed;
-      const response = await apiService.get<any>(endpoint);
-      if (!response.error) {
-        const segments = response.data?.data?.segments || [];
-        const mappedMatches = segments.map((item: any, idx: number) => ({
-          id: String(idx),
-          homeTeam: item.team1,
-          awayTeam: item.team2,
-          date: item.unix_timestamp,
-          status: item.match_series,
-          tournament: item.match_event,
-          homeTeamLogo: item.flag1 ? `https://owcdn.net/img/${item.flag1}.png` : DEFAULT_TEAM_LOGO,
-          awayTeamLogo: item.flag2 ? `https://owcdn.net/img/${item.flag2}.png` : DEFAULT_TEAM_LOGO,
-          score: `${item.score1 || '0'} - ${item.score2 || '0'}`,
-          matchPage: item.match_page,
-          timeUntil: item.time_until_match,
-        }));
-        setMatches(mappedMatches);
-      }
+      const filterObj = FILTERS.find(f => f.key === selectedFilter);
+      const data = filterObj ? await filterObj.fetch() : [];
+      setMatches(data);
     } catch (error) {
       console.error('Maç verileri yüklenirken hata:', error);
     } finally {
@@ -69,53 +44,41 @@ export default function MatchesScreen() {
 
   const getTeamLogo = (teamName: string) => {
     if (!teamName) return teamLogos['default'];
-    const key = teamName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const key = normalizeTeamName(teamName);
     return teamLogos[key] || teamLogos['default'];
   };
 
-  const renderMatchItem = ({ item }: { item: Match }) => {
+  const renderMatchItem = ({ item }: { item: any }) => {
     return (
       <TouchableOpacity 
-        style={[styles.matchCard, { backgroundColor: theme.colors.card }]}
+        style={[styles.matchCard, { backgroundColor: theme.colors.background, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, elevation: 4 }]}
         onPress={() => router.push(`/match/${item.id}`)}
+        activeOpacity={0.85}
       >
         <View style={styles.matchHeader}>
-          <Text style={[styles.tournamentName, { color: theme.colors.text }]}>
-            {item.tournament}
-          </Text>
-          <Text style={[styles.matchTime, { color: theme.colors.text }]}>
-            {formatDate(item.date)}
-          </Text>
+          <Text style={[styles.tournamentName, { color: theme.colors.text, opacity: 0.7 }]}>{item.event || '-'}</Text>
+          <Text style={[styles.matchTime, { color: theme.colors.text, opacity: 0.7 }]}>{item.datetime ? new Date(item.datetime).toLocaleString('tr-TR') : '-'}</Text>
         </View>
-
         <View style={styles.teamsContainer}>
           <View style={styles.teamInfo}>
             <Image 
-              source={getTeamLogo(item.homeTeam)}
+              source={getTeamLogo(item.teams?.[0]?.name)}
               style={styles.teamLogo}
               defaultSource={teamLogos['default']}
             />
-            <Text style={[styles.teamName, { color: theme.colors.text }]} numberOfLines={1}>
-              {item.homeTeam}
-            </Text>
+            <Text style={[styles.teamName, { color: theme.colors.text }]} numberOfLines={1}>{item.teams?.[0]?.name || '-'}</Text>
           </View>
-
           <View style={styles.matchInfo}>
-            <Text style={[styles.vsText, { color: theme.colors.text }]}>VS</Text>
-            <Text style={[styles.matchStatus, { color: theme.colors.text }]}>
-              {item.status}
-            </Text>
+            <Text style={[styles.score, { color: theme.colors.primary }]}>{item.scores ? `${item.scores[0]} - ${item.scores[1]}` : '-'}</Text>
+            <Text style={[styles.matchStatus, { color: theme.colors.text, opacity: 0.7 }]}>{item.status || '-'}</Text>
           </View>
-
           <View style={styles.teamInfo}>
             <Image 
-              source={getTeamLogo(item.awayTeam)}
+              source={getTeamLogo(item.teams?.[1]?.name)}
               style={styles.teamLogo}
               defaultSource={teamLogos['default']}
             />
-            <Text style={[styles.teamName, { color: theme.colors.text }]} numberOfLines={1}>
-              {item.awayTeam}
-            </Text>
+            <Text style={[styles.teamName, { color: theme.colors.text }]} numberOfLines={1}>{item.teams?.[1]?.name || '-'}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -126,9 +89,10 @@ export default function MatchesScreen() {
     <TouchableOpacity
       style={[
         styles.filterButton,
-        selectedFilter === filter && { backgroundColor: theme.colors.primary },
+        selectedFilter === filter && { backgroundColor: theme.colors.primary, borderWidth: 0 },
       ]}
       onPress={() => setSelectedFilter(filter)}
+      activeOpacity={0.85}
     >
       <Text
         style={[
@@ -144,12 +108,14 @@ export default function MatchesScreen() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
-        <View style={styles.filterContainer}>
-          {renderFilterButton('all', 'Tümü')}
-          {renderFilterButton('live', 'Canlı')}
-          {renderFilterButton('upcoming', 'Yaklaşan')}
-          {renderFilterButton('completed', 'Tamamlanan')}
-        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterScroll}
+          style={{ marginBottom: 8 }}
+        >
+          {FILTERS.map(f => renderFilterButton(f.key, f.label))}
+        </ScrollView>
         <ActivityIndicator size="large" color={theme.colors.primary} style={{ marginTop: 32 }} />
       </SafeAreaView>
     );
@@ -157,12 +123,14 @@ export default function MatchesScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
-      <View style={styles.filterContainer}>
-        {renderFilterButton('all', 'Tümü')}
-        {renderFilterButton('live', 'Canlı')}
-        {renderFilterButton('upcoming', 'Yaklaşan')}
-        {renderFilterButton('completed', 'Tamamlanan')}
-      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filterScroll}
+        style={{ marginBottom: 8 }}
+      >
+        {FILTERS.map(f => renderFilterButton(f.key, f.label))}
+      </ScrollView>
       {matches.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="trophy-outline" size={64} color={theme.colors.primary} style={{ marginBottom: 16 }} />
@@ -173,8 +141,9 @@ export default function MatchesScreen() {
         <FlatList
           data={matches}
           renderItem={renderMatchItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContainer}
+          keyExtractor={(item, idx) => String(item.id || idx)}
+          contentContainerStyle={[styles.listContainer, { backgroundColor: theme.colors.background }]}
+          style={{ backgroundColor: theme.colors.background }}
           showsVerticalScrollIndicator={false}
         />
       )}
@@ -186,33 +155,47 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  filterContainer: {
+  filterScroll: {
+    paddingHorizontal: 8,
+    gap: 10,
     flexDirection: 'row',
-    padding: 16,
-    gap: 8,
+    alignItems: 'center',
+    minHeight: 60,
   },
   filterButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 0, 0, 0.1)',
+    paddingHorizontal: 22,
+    paddingVertical: 12,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 0, 0, 0.08)',
+    marginHorizontal: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(255,0,0,0.12)',
+    minWidth: 110,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   filterButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 16,
+    fontWeight: '600',
   },
   listContainer: {
     padding: 16,
   },
   matchCard: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 24,
+    marginHorizontal: 8,
+    backgroundColor: '#181818',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
   },
   matchHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   tournamentName: {
     fontSize: 14,
@@ -225,32 +208,42 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 8,
   },
   teamInfo: {
     flex: 1,
     alignItems: 'center',
   },
   teamLogo: {
-    width: 40,
-    height: 40,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     marginBottom: 8,
+    backgroundColor: '#222',
+    borderWidth: 1.5,
+    borderColor: '#333',
   },
   teamName: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 16,
+    fontWeight: 'bold',
     textAlign: 'center',
+    marginBottom: 2,
   },
   matchInfo: {
     alignItems: 'center',
-    marginHorizontal: 16,
+    marginHorizontal: 18,
+    minWidth: 60,
   },
-  vsText: {
-    fontSize: 14,
-    fontWeight: '500',
+  score: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 2,
   },
   matchStatus: {
     fontSize: 12,
     fontWeight: '500',
+    opacity: 0.7,
   },
   loadingText: {
     fontSize: 16,
@@ -261,11 +254,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 48,
+    marginTop: 64,
   },
   emptySubtext: {
-    fontSize: 14,
+    fontSize: 15,
     textAlign: 'center',
-    marginTop: 8,
+    marginTop: 10,
+    opacity: 0.7,
   },
 }); 

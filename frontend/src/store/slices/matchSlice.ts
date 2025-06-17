@@ -1,29 +1,18 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
-interface Match {
-  id: string;
-  homeTeam: string;
-  awayTeam: string;
-  startTime: Date;
-  endTime: Date;
-  status: 'upcoming' | 'live' | 'completed';
-  score?: {
-    home: number;
-    away: number;
-  };
-  tournament: string;
-}
+import { Match } from '../../types/match';
 
 interface MatchState {
-  items: Match[];
+  matches: Match[];
   loading: boolean;
   error: string | null;
+  selectedMatch: Match | null;
 }
 
 const initialState: MatchState = {
-  items: [],
+  matches: [],
   loading: false,
   error: null,
+  selectedMatch: null,
 };
 
 const matchSlice = createSlice({
@@ -31,7 +20,8 @@ const matchSlice = createSlice({
   initialState,
   reducers: {
     setMatches: (state, action: PayloadAction<Match[]>) => {
-      state.items = action.payload;
+      state.matches = action.payload;
+      state.error = null;
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
@@ -39,8 +29,24 @@ const matchSlice = createSlice({
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
+    setSelectedMatch: (state, action: PayloadAction<Match | null>) => {
+      state.selectedMatch = action.payload;
+    },
+    updateMatch: (state, action: PayloadAction<Match>) => {
+      const index = state.matches.findIndex(match => match.id === action.payload.id);
+      if (index !== -1) {
+        state.matches[index] = action.payload;
+      }
+    },
   },
 });
 
-export const { setMatches, setLoading, setError } = matchSlice.actions;
+export const {
+  setMatches,
+  setLoading,
+  setError,
+  setSelectedMatch,
+  updateMatch,
+} = matchSlice.actions;
+
 export default matchSlice.reducer; 

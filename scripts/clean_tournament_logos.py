@@ -1,35 +1,22 @@
 import os
+from pathlib import Path
 import shutil
 import re
-from pathlib import Path
 
 def clean_filename(filename):
-    # Türkçe karakterleri düzelt
-    tr_chars = {
-        'ı': 'i', 'ğ': 'g', 'ü': 'u', 'ş': 's', 'ö': 'o', 'ç': 'c',
-        'İ': 'I', 'Ğ': 'G', 'Ü': 'U', 'Ş': 'S', 'Ö': 'O', 'Ç': 'C'
-    }
-    
-    # Dosya adı ve uzantıyı ayır
+    # Dosya adından uzantıyı ayır
     name, ext = os.path.splitext(filename)
     
-    # Türkçe karakterleri değiştir
-    for tr_char, eng_char in tr_chars.items():
-        name = name.replace(tr_char, eng_char)
+    # Özel karakterleri temizle ve küçük harfe çevir
+    cleaned = re.sub(r'[^a-zA-Z0-9]', '_', name.lower())
     
-    # Özel karakterleri ve boşlukları temizle
-    name = re.sub(r'[^a-zA-Z0-9-]', '-', name)
+    # Birden fazla alt çizgiyi tek alt çizgiye dönüştür
+    cleaned = re.sub(r'_+', '_', cleaned)
     
-    # Birden fazla tireyi tek tireye dönüştür
-    name = re.sub(r'-+', '-', name)
+    # Baştaki ve sondaki alt çizgileri kaldır
+    cleaned = cleaned.strip('_')
     
-    # Baştaki ve sondaki tireleri kaldır
-    name = name.strip('-')
-    
-    # Küçük harfe çevir
-    name = name.lower()
-    
-    return f"{name}{ext}"
+    return f"{cleaned}{ext}"
 
 def process_logos():
     # Kaynak ve hedef dizinleri

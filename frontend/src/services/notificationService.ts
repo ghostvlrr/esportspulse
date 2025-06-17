@@ -1,7 +1,9 @@
 import { store } from '../store';
-import { addNotification, updatePreferences, NotificationPreferences, NotificationItem } from '../store/slices/notificationSlice';
+import { addNotification, updatePreferences } from '../store/slices/notificationSlice';
+import { NotificationPreferences, NotificationItem } from '../types/notification';
 import { toast } from 'react-toastify';
 import { api } from './api';
+import type { Notification } from '../types/notification';
 
 // UUID üretici
 function generateUUID() {
@@ -200,4 +202,30 @@ class NotificationService {
   }
 }
 
-export const notificationService = new NotificationService(); 
+export const notificationService = new NotificationService();
+
+export const getNotifications = async (): Promise<Notification[]> => {
+  try {
+    const response = await api.get('/notifications');
+    return response.data;
+  } catch (error) {
+    console.error('Bildirimler alınırken hata:', error);
+    return [];
+  }
+};
+
+export const markNotificationAsRead = async (notificationId: string): Promise<void> => {
+  try {
+    await api.put(`/notifications/${notificationId}/read`);
+  } catch (error) {
+    console.error('Bildirim okundu olarak işaretlenirken hata:', error);
+  }
+};
+
+export const deleteNotification = async (notificationId: string): Promise<void> => {
+  try {
+    await api.delete(`/notifications/${notificationId}`);
+  } catch (error) {
+    console.error('Bildirim silinirken hata:', error);
+  }
+}; 

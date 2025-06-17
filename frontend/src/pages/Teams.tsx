@@ -10,6 +10,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
+import { useQuery } from 'react-query';
+import { getTeams } from '../services/teamService';
+import { Box, Typography, Grid, Card, CardContent, CardMedia, Chip } from '@mui/material';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface NotificationSettings {
   enabled: boolean;
@@ -42,7 +46,6 @@ const Teams: React.FC = () => {
     return stored ? JSON.parse(stored) : [];
   });
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
-  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [tempSettings, setTempSettings] = useState<NotificationSettings>({
     enabled: true,
     matchStart: true,
@@ -310,7 +313,7 @@ const Teams: React.FC = () => {
         fullWidth
       >
         <DialogTitle>
-          {selectedTeam?.name} - Bildirim Ayarları
+          {/* selectedTeam?.name */} - Bildirim Ayarları
         </DialogTitle>
         <DialogContent>
           <div className="notification-settings">

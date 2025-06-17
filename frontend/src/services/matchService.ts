@@ -1,5 +1,5 @@
 import { api } from './api';
-import { Match } from '../store/slices/matchesSlice';
+import { Match } from '../types/match';
 
 interface MatchFilters {
   status?: 'live' | 'upcoming' | 'completed';
@@ -9,7 +9,7 @@ interface MatchFilters {
 class MatchService {
   async getMatches(filters?: MatchFilters): Promise<Match[]> {
     try {
-      const response = await api.get('/api/matches', { params: filters });
+      const response = await api.get('/matches', { params: filters });
       return response.data;
     } catch (error) {
       console.error('Maçlar yüklenirken hata oluştu:', error);
@@ -19,7 +19,7 @@ class MatchService {
 
   async getLiveMatches(): Promise<Match[]> {
     try {
-      const response = await api.get('/api/matches/live');
+      const response = await api.get('/matches/live');
       return response.data;
     } catch (error) {
       console.error('Canlı maçlar yüklenirken hata oluştu:', error);
@@ -29,7 +29,7 @@ class MatchService {
 
   async getMatchById(id: string): Promise<Match> {
     try {
-      const response = await api.get(`/api/matches/${id}`);
+      const response = await api.get(`/matches/${id}`);
       return response.data;
     } catch (error) {
       console.error('Maç detayları yüklenirken hata oluştu:', error);
@@ -39,7 +39,7 @@ class MatchService {
 
   async getMatchesByDate(date: string): Promise<Match[]> {
     try {
-      const response = await api.get('/api/matches', {
+      const response = await api.get('/matches', {
         params: { date, status: 'completed' }
       });
       return response.data;

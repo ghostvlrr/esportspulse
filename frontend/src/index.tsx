@@ -7,8 +7,6 @@ import App from './App';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js').then(registration => {
-      console.log('ServiceWorker registration successful');
-      
       // Bildirim izinlerini kontrol et ve iste
       if ('Notification' in window) {
         if (Notification.permission === 'default') {
@@ -23,7 +21,6 @@ if ('serviceWorker' in navigator) {
             userVisibleOnly: true,
             applicationServerKey: 'YOUR_VAPID_PUBLIC_KEY' // Backend'den alınacak
           }).then(subscription => {
-            console.log('Push notification subscription successful');
             // Backend'e subscription bilgisini gönder
             fetch('/api/notifications/subscribe', {
               method: 'POST',

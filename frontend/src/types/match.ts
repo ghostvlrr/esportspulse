@@ -15,10 +15,37 @@ export interface Tournament {
 
 export interface Match {
   id: string;
-  status: 'live' | 'upcoming' | 'completed';
-  homeTeam: Team;
-  awayTeam: Team;
-  score: Score;
-  date: string;
-  tournament: Tournament;
+  team1: string;
+  team2: string;
+  team1Logo?: string;
+  team2Logo?: string;
+  team1_logo_url?: string;
+  team2_logo_url?: string;
+  score1?: string;
+  score2?: string;
+  time_completed?: string;
+  time_until_match?: string;
+  match_event?: string;
+  match_series?: string;
+  tournament_name?: string;
+  round_info?: string;
+  status?: 'live' | 'upcoming' | 'completed';
+  match_page?: string;
+  tournament_icon?: string;
+  tournamentIcon?: string;
+  date: Date | null;
+  notifications?: {
+    enabled: boolean;
+    beforeMatch: number;
+    matchStart: boolean;
+    matchEnd: boolean;
+    scoreUpdate: boolean;
+    round_info?: string;
+  };
+  team1LogoPng?: string | null;
+  team1LogoSvg?: string | null;
+  team2LogoPng?: string | null;
+  team2LogoSvg?: string | null;
+  _rowIndex?: number;
+  parsed_date?: string;
 } 

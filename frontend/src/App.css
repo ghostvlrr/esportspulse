@@ -11,6 +11,14 @@
   --color-border: rgba(255, 0, 0, 0.15);
 }
 
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
 body[data-theme='default'] {
   --color-bg: #0A0A0A;
   --color-sidebar: #171717;
@@ -108,18 +116,10 @@ body[data-theme='gold'] {
   box-sizing: border-box;
 }
 
-body {
-  font-family: 'Roboto', sans-serif;
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  line-height: 1.6;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
 .app {
   display: flex;
   min-height: 100vh;
-  background: linear-gradient(135deg, #0A0A0A 0%, #171717 50%, #0A0A0A 100%);
+  background-color: var(--color-bg);
   position: relative;
   overflow: hidden;
 }
@@ -140,7 +140,7 @@ body {
   margin-left: 250px;
   padding: 20px;
   min-height: 100vh;
-  background: transparent;
+  background-color: var(--color-bg);
   position: relative;
   z-index: 1;
 }
@@ -149,6 +149,7 @@ body {
   max-width: 1600px;
   margin: 0 auto;
   padding: 20px;
+  background-color: var(--color-bg);
 }
 
 .sidebar {
