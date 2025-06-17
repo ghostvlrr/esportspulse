@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiService } from './api';
 import { ENDPOINTS } from '@/constants/ApiConfig';
+import { Alert } from 'react-native';
 
 export interface Notification {
   id: string;
@@ -39,6 +40,10 @@ class NotificationService {
       await this.fetchNotifications();
     } catch (error) {
       console.error('Bildirimler yüklenirken hata:', error);
+      Alert.alert(
+        'Hata',
+        'Bildirimler yüklenirken bir sorun oluştu. Lütfen daha sonra tekrar deneyin.'
+      );
     }
   }
 
@@ -49,9 +54,18 @@ class NotificationService {
         this.notifications = response.data;
         await this.saveNotifications();
         this.notifyListeners();
+      } else {
+        Alert.alert(
+          'Uyarı',
+          'Bildirimler alınırken bir sorun oluştu. Lütfen internet bağlantınızı kontrol edin.'
+        );
       }
     } catch (error) {
       console.error('Bildirimler alınırken hata:', error);
+      Alert.alert(
+        'Hata',
+        'Bildirimler alınırken bir sorun oluştu. Lütfen daha sonra tekrar deneyin.'
+      );
     }
   }
 

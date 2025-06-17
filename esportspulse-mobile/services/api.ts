@@ -1,11 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VLR_API_BASE, ENDPOINTS } from '@/constants/ApiConfig';
+import NetInfo from '@react-native-community/netinfo';
 
 const BASE_URL = VLR_API_BASE;
+const CACHE_EXPIRY = 5 * 60 * 1000; // 5 dakika
 
 interface ApiResponse<T> {
   data: T;
   error?: string;
+  isFromCache?: boolean;
 }
 
 class ApiService {
@@ -26,13 +29,60 @@ class ApiService {
     return { data };
   }
 
+  private async checkCache<T>(endpoint: string): Promise<ApiResponse<T> | null> {
+    try {
+      const cachedData = await AsyncStorage.getItem(`cache_${endpoint}`);
+      if (cachedData) {
+        const { data, timestamp } = JSON.parse(cachedData);
+        if (Date.now() - timestamp < CACHE_EXPIRY) {
+          return { data, isFromCache: true };
+        }
+      }
+    } catch (error) {
+      console.error('Önbellek kontrolü sırasında hata:', error);
+    }
+    return null;
+  }
+
+  private async saveToCache<T>(endpoint: string, data: T): Promise<void> {
+    try {
+      await AsyncStorage.setItem(
+        `cache_${endpoint}`,
+        JSON.stringify({ data, timestamp: Date.now() })
+      );
+    } catch (error) {
+      console.error('Önbelleğe kaydetme sırasında hata:', error);
+    }
+  }
+
   async get<T>(endpoint: string): Promise<ApiResponse<T>> {
     try {
+      const networkState = await NetInfo.fetch();
+      
+      if (!networkState.isConnected) {
+        const cachedData = await this.checkCache<T>(endpoint);
+        if (cachedData) {
+          return cachedData;
+        }
+        return { data: null as T, error: 'İnternet bağlantısı yok' };
+      }
+
       const response = await fetch(`${BASE_URL}${endpoint}`, {
         headers: await this.getHeaders(),
       });
-      return this.handleResponse<T>(response);
+      
+      const result = await this.handleResponse<T>(response);
+      
+      if (!result.error) {
+        await this.saveToCache(endpoint, result.data);
+      }
+      
+      return result;
     } catch (error) {
+      const cachedData = await this.checkCache<T>(endpoint);
+      if (cachedData) {
+        return cachedData;
+      }
       return { data: null as T, error: 'Bağlantı hatası' };
     }
   }

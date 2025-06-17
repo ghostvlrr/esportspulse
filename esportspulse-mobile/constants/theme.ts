@@ -1,5 +1,82 @@
 import { DarkTheme, DefaultTheme } from '@react-navigation/native';
 
+export interface Theme {
+  colors: {
+    primary: string;
+    secondary: string;
+    background: string;
+    surface: string;
+    text: string;
+    textSecondary: string;
+    border: string;
+    tabBar: string;
+    tabBarActive: string;
+    tabBarInactive: string;
+    error: string;
+    success: string;
+    warning: string;
+    info: string;
+  };
+  spacing: {
+    xs: number;
+    sm: number;
+    md: number;
+    lg: number;
+    xl: number;
+  };
+  borderRadius: {
+    sm: number;
+    md: number;
+    lg: number;
+    xl: number;
+  };
+  typography: {
+    h1: {
+      fontSize: number;
+      fontWeight: string;
+    };
+    h2: {
+      fontSize: number;
+      fontWeight: string;
+    };
+    h3: {
+      fontSize: number;
+      fontWeight: string;
+    };
+    body: {
+      fontSize: number;
+    };
+    caption: {
+      fontSize: number;
+    };
+    small: {
+      fontSize: number;
+    };
+  };
+  shadows: {
+    small: {
+      shadowColor: string;
+      shadowOffset: {
+        width: number;
+        height: number;
+      };
+      shadowOpacity: number;
+      shadowRadius: number;
+      elevation: number;
+    };
+    medium: {
+      shadowColor: string;
+      shadowOffset: {
+        width: number;
+        height: number;
+      };
+      shadowOpacity: number;
+      shadowRadius: number;
+      elevation: number;
+    };
+  };
+}
+
 export const darkTheme = {
   colors: {
     primary: '#FF0000',
