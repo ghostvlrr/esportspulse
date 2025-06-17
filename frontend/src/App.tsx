@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
@@ -25,46 +25,44 @@ import Favorites from './pages/Favorites';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
 import Notifications from './pages/Notifications';
-import Events from './pages/Events';
 
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from './store';
 import { Provider } from 'react-redux';
 import { store } from './store';
 import Sidebar from './components/Sidebar';
+import { AnimatePresence, motion } from 'framer-motion';
 
 function AppContent() {
-  const dispatch = useDispatch();
-  const { user } = useSelector((state: RootState) => state.auth);
+  const location = useLocation();
+  return (
+    <div className="content">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={location.pathname}
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -24 }}
+          transition={{ duration: 0.35, ease: 'easeInOut' }}
+          style={{ minHeight: '100vh' }}
+        >
+          <Routes location={location}>
+            <Route path="/" element={<Matches />} />
+            <Route path="/teams" element={<Teams />} />
+            <Route path="/news" element={<News />} />
+            <Route path="/favorites" element={<Notifications />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function App() {
   const { muiTheme } = useTheme();
-
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        await axios.get(`${process.env.REACT_APP_API_BASE_URL}/notifications`);
-      } catch (error) {
-        console.error('Bildirimler yüklenirken hata:', error);
-      }
-    };
-
-    fetchNotifications();
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    const socket = io(SOCKET_URL);
-    socket.emit('join', user.id);
-    socket.on('notification', (data: any) => {
-      // dispatch(addNotification({
-      //   ...data,
-      //   id: `${data.type}-${Date.now()}`
-      // }));
-    });
-    return () => {
-      socket.disconnect();
-    };
-  }, [user, dispatch]);
-
   return (
     <MuiThemeProvider theme={muiTheme}>
       <ErrorBoundary>
@@ -72,18 +70,7 @@ function AppContent() {
         <Router>
           <Sidebar />
           <main className="main-content">
-            <div className="content">
-              <Routes>
-                <Route path="/" element={<Matches />} />
-                <Route path="/teams" element={<Teams />} />
-                <Route path="/news" element={<News />} />
-                <Route path="/favorites" element={<Favorites />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/notifications" element={<Notifications />} />
-                <Route path="/events" element={<Events />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </div>
+            <AppContent />
           </main>
         </Router>
         <ToastContainer position="bottom-right" />
@@ -92,20 +79,14 @@ function AppContent() {
   );
 }
 
-function App() {
-  return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
-  );
-}
-
 function AppWrapper() {
   return (
     <Provider store={store}>
       <HelmetProvider>
         <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={tr}>
-          <App />
+          <ThemeProvider>
+            <App />
+          </ThemeProvider>
         </LocalizationProvider>
       </HelmetProvider>
     </Provider>

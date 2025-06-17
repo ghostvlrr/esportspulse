@@ -15,9 +15,6 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('API İsteği:', config.method?.toUpperCase(), config.url);
-    }
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -25,7 +22,6 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('API İstek Hatası:', error);
     return Promise.reject(error);
   }
 );
@@ -33,9 +29,6 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('API Yanıtı:', response.status, response.config.url);
-    }
     return response;
   },
   async (error) => {

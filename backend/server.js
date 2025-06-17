@@ -19,30 +19,34 @@ const port = process.env.PORT || 3001;
 const limiter = rateLimit({
   windowMs: process.env.RATE_LIMIT_WINDOW_MS || 900000, // 15 minutes
   max: process.env.RATE_LIMIT_MAX_REQUESTS || 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req) => req.path.startsWith('/api/health'),
-  handler: (req, res) => {
-    res.status(429).json({
-      error: 'Rate limit exceeded',
-      message: 'Çok fazla istek gönderdiniz. Lütfen daha sonra tekrar deneyin.',
-      retryAfter: Math.ceil(limiter.windowMs / 1000)
-    });
-  }
+  message: 'Too many requests from this IP, please try again later.'
 });
 
 // Apply rate limiting to all routes
-app.use('/api/', limiter);
+app.use(limiter);
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
-});
+// Güvenli CORS ayarları (slash'ı otomatik kaldır)
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://esportspulse.netlify.app',
+  'https://testttttttttttttttttttt.netlify.app'
+];
 
-// CORS ayarları
+const normalizeOrigin = (origin) => {
+  if (!origin) return origin;
+  return origin.endsWith('/') ? origin.slice(0, -1) : origin;
+};
+
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    const normalized = normalizeOrigin(origin);
+    if (allowedOrigins.includes(normalized)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -53,7 +57,15 @@ app.use(cors(corsOptions));
 // Socket.io ayarları
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.SOCKET_CORS_ORIGIN || 'http://localhost:3000',
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      const normalized = normalizeOrigin(origin);
+      if (allowedOrigins.includes(normalized)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -74,7 +86,13 @@ app.get('/api/matches', async (req, res) => {
     ]);
 
     // Turnuva logolarını oku
-    const eventsDir = path.join(__dirname, '../frontend/public/events');
+    const eventsDir = path.join(__dirname, 'events');
+    
+    // Dizin yoksa oluştur
+    if (!fs.existsSync(eventsDir)) {
+      fs.mkdirSync(eventsDir, { recursive: true });
+    }
+
     const logoFiles = fs.readdirSync(eventsDir)
       .filter(file => file.endsWith('.png') && file !== 'default-tournament-logo.png')
       .reduce((acc, file) => {
@@ -84,9 +102,9 @@ app.get('/api/matches', async (req, res) => {
       }, {});
 
     let allMatches = [
-      ...liveResponse.data.data.segments,
-      ...upcomingResponse.data.data.segments,
-      ...pastResponse.data.data.segments
+      ...(liveResponse.data.data.segments || []),
+      ...(upcomingResponse.data.data.segments || []),
+      ...(pastResponse.data.data.segments || [])
     ].map(match => {
       // Benzersiz id oluştur
       match.id = match.id || match.match_page || `${match.team1}-${match.team2}-${match.tournament_name || ''}`;
@@ -116,7 +134,6 @@ app.get('/api/matches', async (req, res) => {
 
     // date filtresi uygula (sadece tamamlanan maçlar için)
     if (date) {
-      // Türkiye saatine göre günün başlangıcı ve bitişi
       const startOfDay = new Date(date + 'T00:00:00+03:00');
       const endOfDay = new Date(date + 'T23:59:59+03:00');
 
@@ -129,8 +146,8 @@ app.get('/api/matches', async (req, res) => {
 
     res.json(allMatches);
   } catch (error) {
-    console.error('Maçlar yüklenirken hata:', error.message);
-    res.status(500).json({ error: 'Maçlar yüklenirken bir hata oluştu.' });
+    console.error('Tüm maçlar yüklenirken hata:', error.message);
+    res.status(500).json({ error: 'Tüm maçlar yüklenirken bir hata oluştu.' });
   }
 });
 
@@ -138,10 +155,13 @@ app.get('/api/matches', async (req, res) => {
 app.get('/api/matches/live', async (req, res) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/match?q=live_score`);
-    res.json(response.data.data.segments);
+    res.json(response.data.data.segments || []);
   } catch (error) {
     console.error('Canlı maçlar yüklenirken hata:', error.message);
-    res.status(500).json({ error: 'Canlı maçlar yüklenirken bir hata oluştu.' });
+    res.status(500).json({ 
+      error: 'Canlı maçlar yüklenirken bir hata oluştu.',
+      details: error.message
+    });
   }
 });
 
@@ -149,10 +169,13 @@ app.get('/api/matches/live', async (req, res) => {
 app.get('/api/matches/upcoming', async (req, res) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/match?q=upcoming`);
-    res.json(response.data.data.segments);
+    res.json(response.data.data.segments || []);
   } catch (error) {
     console.error('Yaklaşan maçlar yüklenirken hata:', error.message);
-    res.status(500).json({ error: 'Yaklaşan maçlar yüklenirken bir hata oluştu.' });
+    res.status(500).json({ 
+      error: 'Yaklaşan maçlar yüklenirken bir hata oluştu.',
+      details: error.message
+    });
   }
 });
 
@@ -160,10 +183,13 @@ app.get('/api/matches/upcoming', async (req, res) => {
 app.get('/api/matches/past', async (req, res) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/match?q=results`);
-    res.json(response.data.data.segments);
+    res.json(response.data.data.segments || []);
   } catch (error) {
     console.error('Geçmiş maçlar yüklenirken hata:', error.message);
-    res.status(500).json({ error: 'Geçmiş maçlar yüklenirken bir hata oluştu.' });
+    res.status(500).json({ 
+      error: 'Geçmiş maçlar yüklenirken bir hata oluştu.',
+      details: error.message
+    });
   }
 });
 
@@ -540,7 +566,7 @@ app.get('/api/notifications', (req, res) => {
 // Canlı maçları kontrol et ve bildirim oluştur
 setInterval(async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/matches/live`);
+    const response = await axios.get(`${API_BASE_URL}/match?q=live_score`);
     const liveMatches = response.data.data.segments;
 
     // Favori takımların canlıda olup olmadığını kontrol et
@@ -612,32 +638,40 @@ setInterval(async () => {
 // Events API
 app.get('/api/events', (req, res) => {
     try {
-        const eventsDir = path.join(__dirname, '../frontend/public/events/processed');
+        const eventsDir = path.join(__dirname, 'events');
+        
+        if (!fs.existsSync(eventsDir)) {
+            fs.mkdirSync(eventsDir, { recursive: true });
+        }
+        
         console.log('Events dizini:', eventsDir);
         
-        const files = fs.readdirSync(eventsDir);
+        // Dosyaları oku ve tekrarlananları filtrele
+        const files = fs.readdirSync(eventsDir)
+            .filter(file => file.endsWith('.png'))
+            .filter(file => !file.includes('_png')) // Alt çizgili versiyonları filtrele
+            .filter(file => file !== 'default-tournament-logo.png');
+        
         console.log('Bulunan dosyalar:', files);
         
-        const events = files
-            .filter(file => file.endsWith('.png') && file !== 'default-tournament-logo.png')
-            .map(file => {
-                const name = file.replace('.png', '');
-                const event = {
-                    id: name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-                    name: name,
-                    logo: file,
-                    date: '2025',
-                    region: getRegionFromName(name)
-                };
-                console.log('Oluşturulan event:', event);
-                return event;
-            });
+        const events = files.map(file => {
+            const name = file.replace('.png', '');
+            const event = {
+                id: name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+                name: name,
+                logo: file,
+                date: '2025',
+                region: getRegionFromName(name)
+            };
+            console.log('Oluşturulan event:', event);
+            return event;
+        });
 
         console.log('Toplam event sayısı:', events.length);
         res.json(events);
     } catch (error) {
         console.error('Events API hatası:', error);
-        res.status(500).json({ error: 'Events yüklenirken bir hata oluştu' });
+        res.json([]);
     }
 });
 
@@ -677,30 +711,9 @@ function parseTimeCompleted(str) {
 // Hata yönetimi middleware'i
 app.use((err, req, res, next) => {
   console.error('Sunucu hatası:', err);
-  
-  // Hata tipine göre özel mesajlar
-  let errorMessage = 'Bir hata oluştu';
-  let statusCode = 500;
-
-  if (err.name === 'ValidationError') {
-    statusCode = 400;
-    errorMessage = 'Geçersiz veri formatı';
-  } else if (err.name === 'UnauthorizedError') {
-    statusCode = 401;
-    errorMessage = 'Yetkisiz erişim';
-  } else if (err.name === 'ForbiddenError') {
-    statusCode = 403;
-    errorMessage = 'Bu işlem için yetkiniz yok';
-  } else if (err.name === 'NotFoundError') {
-    statusCode = 404;
-    errorMessage = 'İstenen kaynak bulunamadı';
-  }
-
-  res.status(statusCode).json({
-    error: errorMessage,
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined,
-    timestamp: new Date().toISOString(),
-    path: req.path
+  res.status(500).json({
+    error: 'Sunucu hatası',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Bir hata oluştu'
   });
 });
 
@@ -716,78 +729,13 @@ app.use((req, res) => {
 io.on('connection', (socket) => {
   console.log('Yeni kullanıcı bağlandı:', socket.id);
 
-  // Bağlantı durumunu kontrol et
-  const checkConnection = () => {
-    if (!socket.connected) {
-      console.log('Bağlantı koptu:', socket.id);
-      return false;
-    }
-    return true;
-  };
-
-  // Kullanıcı odaya katılma
   socket.on('join', (userId) => {
-    if (!checkConnection()) return;
-    
-    try {
-      socket.join(userId);
-      console.log(`Kullanıcı ${userId} odasına katıldı`);
-      
-      // Bağlantı durumunu bildir
-      socket.emit('connection_status', {
-        status: 'connected',
-        userId: userId,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Oda katılım hatası:', error);
-      socket.emit('error', {
-        message: 'Odaya katılırken bir hata oluştu',
-        code: 'ROOM_JOIN_ERROR'
-      });
-    }
+    socket.join(userId);
+    console.log(`Kullanıcı ${userId} odasına katıldı`);
   });
 
-  // Özel mesaj gönderme
-  socket.on('private_message', (data) => {
-    if (!checkConnection()) return;
-    
-    try {
-      const { recipientId, message } = data;
-      io.to(recipientId).emit('private_message', {
-        senderId: socket.id,
-        message,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Mesaj gönderme hatası:', error);
-      socket.emit('error', {
-        message: 'Mesaj gönderilirken bir hata oluştu',
-        code: 'MESSAGE_SEND_ERROR'
-      });
-    }
-  });
-
-  // Bağlantı koptuğunda
   socket.on('disconnect', () => {
     console.log('Kullanıcı ayrıldı:', socket.id);
-    
-    // Tüm odalardan çıkar
-    socket.rooms.forEach(room => {
-      if (room !== socket.id) {
-        socket.leave(room);
-        console.log(`Kullanıcı ${socket.id} ${room} odasından ayrıldı`);
-      }
-    });
-  });
-
-  // Hata durumunda
-  socket.on('error', (error) => {
-    console.error('Socket hatası:', error);
-    socket.emit('error', {
-      message: 'Bir hata oluştu',
-      code: 'SOCKET_ERROR'
-    });
   });
 });
 

@@ -37,23 +37,6 @@
   transform: scale(1.05);
 }
 
-.sidebar-overlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1999;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.sidebar-overlay.visible {
-  opacity: 1;
-}
-
 .logo {
   display: flex;
   align-items: center;
@@ -212,18 +195,12 @@
     transform: translateX(-100%);
     width: 85vw !important;
     max-width: 320px;
+    background-color: rgba(23, 23, 23, 0.98);
+    backdrop-filter: blur(10px);
   }
 
   .sidebar.open {
     transform: translateX(0);
-  }
-
-  .sidebar-overlay {
-    display: block;
-  }
-
-  .sidebar-overlay.visible {
-    opacity: 1;
   }
 
   .logo h1 {
@@ -251,13 +228,7 @@
     width: 280px;
   }
 
-  .logo h1 {
-    font-size: 2rem;
-  }
-}
-
-@media (min-width: 769px) {
   .hamburger-menu {
-    display: none !important;
+    display: none;
   }
 } 

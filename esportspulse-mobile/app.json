@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "EsportsPulse",
+    "slug": "esportspulse-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.esportspulse.mobile"
+    },
+    "android": {
+      "package": "com.esportspulse.mobile"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "scheme": "esportspulse",
+    "sdkVersion": "53.0.0"
+  }
+}
