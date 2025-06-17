@@ -70,17 +70,17 @@ export default function FavoritesScreen() {
         </View>
         <Text style={[styles.favoriteName, { color: theme.colors.text }]}>{item.name}</Text>
         {item.description && (
-          <Text style={[styles.favoriteDescription, { color: theme.colors.textSecondary }]} numberOfLines={2}>
+          <Text style={[styles.favoriteDescription, { color: theme.colors.text }]} numberOfLines={2}>
             {item.description}
           </Text>
         )}
         {item.status && (
-          <Text style={[styles.favoriteStatus, { color: theme.colors.textSecondary }]}>
+          <Text style={[styles.favoriteStatus, { color: theme.colors.text }]}>
             {item.status}
           </Text>
         )}
         {item.date && (
-          <Text style={[styles.favoriteDate, { color: theme.colors.textSecondary }]}>
+          <Text style={[styles.favoriteDate, { color: theme.colors.text }]}>
             {item.date}
           </Text>
         )}
@@ -119,11 +119,11 @@ export default function FavoritesScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={styles.emptyContainer}>
-          <Ionicons name="heart-outline" size={64} color={theme.colors.textSecondary} />
+          <Ionicons name="heart-outline" size={64} color={theme.colors.text} />
           <Text style={[styles.emptyText, { color: theme.colors.text }]}>
             Henüz favori eklenmemiş
           </Text>
-          <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>
+          <Text style={[styles.emptySubtext, { color: theme.colors.text }]}>
             Favori eklemek için ilgili sayfaları ziyaret edin
           </Text>
         </View>

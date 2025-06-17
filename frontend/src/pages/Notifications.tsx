@@ -173,10 +173,6 @@ const Notifications: React.FC = () => {
     toast.success('Bildirim başarıyla silindi');
   };
 
-  const handleMarkAsRead = (id: string) => {
-    dispatch(markAsRead(id));
-  };
-
   const getNotificationIcon = (type: NotificationItem['type']) => {
     switch (type) {
       case 'matchStart':

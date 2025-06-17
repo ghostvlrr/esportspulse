@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import {
   Container,
   Box,
@@ -56,7 +56,6 @@ function TabPanel(props: TabPanelProps) {
 
 const Profile: React.FC = () => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
   const { user, loading, error } = useSelector((state: RootState) => state.auth);
   const [activeTab, setActiveTab] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
@@ -135,7 +134,7 @@ const Profile: React.FC = () => {
         }),
       };
 
-      const response = await userService.updateProfile(updatedUser);
+      await userService.updateProfile(updatedUser);
       setIsEditing(false);
     } catch (error) {
       console.error('Profil güncellenirken hata oluştu:', error);

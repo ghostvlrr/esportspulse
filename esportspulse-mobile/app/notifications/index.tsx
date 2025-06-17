@@ -68,7 +68,7 @@ export default function NotificationsScreen() {
           </Text>
         </View>
         <TouchableOpacity onPress={() => handleDeleteNotification(item.id)}>
-          <Ionicons name="close" size={20} color={theme.colors.textSecondary} />
+          <Ionicons name="close" size={20} color={theme.colors.text} />
         </TouchableOpacity>
       </View>
 
@@ -78,10 +78,10 @@ export default function NotificationsScreen() {
         disabled={item.read}
       >
         <Text style={[styles.notificationTitle, { color: theme.colors.text }]}>{item.title}</Text>
-        <Text style={[styles.notificationMessage, { color: theme.colors.textSecondary }]}>
+        <Text style={[styles.notificationMessage, { color: theme.colors.text }]}>
           {item.message}
         </Text>
-        <Text style={[styles.notificationDate, { color: theme.colors.textSecondary }]}>
+        <Text style={[styles.notificationDate, { color: theme.colors.text }]}>
           {item.createdAt}
         </Text>
       </TouchableOpacity>
@@ -100,11 +100,11 @@ export default function NotificationsScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={styles.emptyContainer}>
-          <Ionicons name="notifications-off" size={64} color={theme.colors.textSecondary} />
+          <Ionicons name="notifications-off" size={64} color={theme.colors.text} />
           <Text style={[styles.emptyText, { color: theme.colors.text }]}>
             Bildirim bulunmuyor
           </Text>
-          <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>
+          <Text style={[styles.emptySubtext, { color: theme.colors.text }]}>
             Yeni bildirimler burada görünecek
           </Text>
         </View>
@@ -127,7 +127,7 @@ export default function NotificationsScreen() {
               size={24}
               color={
                 notifications.every((n) => n.read)
-                  ? theme.colors.textSecondary
+                  ? theme.colors.text
                   : theme.colors.primary
               }
             />

@@ -4,13 +4,13 @@ import { darkTheme, lightTheme } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 
 const TABS = [
-  { name: 'Ana Sayfa', icon: 'home' as const, route: '/' },
-  { name: 'Maçlar', icon: 'trophy' as const, route: '/matches' },
-  { name: 'Takımlar', icon: 'people' as const, route: '/teams' },
-  { name: 'Haberler', icon: 'newspaper' as const, route: '/news' },
-  { name: 'Favoriler', icon: 'heart' as const, route: '/favorites' },
-  { name: 'Bildirimler', icon: 'notifications' as const, route: '/notifications' },
-  { name: 'Profil', icon: 'person' as const, route: '/profile' },
+  { name: 'Ana Sayfa', icon: 'home' as const, route: 'index' },
+  { name: 'Maçlar', icon: 'trophy' as const, route: 'matches/index' },
+  { name: 'Takımlar', icon: 'people' as const, route: 'teams/index' },
+  { name: 'Haberler', icon: 'newspaper' as const, route: 'news/index' },
+  { name: 'Favoriler', icon: 'heart' as const, route: 'favorites/index' },
+  { name: 'Bildirimler', icon: 'notifications' as const, route: 'notifications/index' },
+  { name: 'Profil', icon: 'person' as const, route: 'profile/index' },
 ];
 
 export default function TabLayout() {

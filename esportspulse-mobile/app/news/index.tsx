@@ -65,17 +65,17 @@ export default function NewsScreen() {
         <View style={styles.newsContent}>
           <View style={styles.newsHeader}>
             <Text style={[styles.category, { color: theme.colors.primary }]}>{item.category}</Text>
-            <Text style={[styles.date, { color: theme.colors.textSecondary }]}>{item.date}</Text>
+            <Text style={[styles.date, { color: theme.colors.text }]}>{item.date}</Text>
           </View>
           <Text style={[styles.title, { color: theme.colors.text }]}>{item.title}</Text>
-          <Text style={[styles.summary, { color: theme.colors.textSecondary }]} numberOfLines={2}>
+          <Text style={[styles.summary, { color: theme.colors.text }]} numberOfLines={2}>
             {item.summary}
           </Text>
           <View style={styles.footer}>
-            <Text style={[styles.author, { color: theme.colors.textSecondary }]}>
+            <Text style={[styles.author, { color: theme.colors.text }]}>
               {item.author}
             </Text>
-            <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.text} />
           </View>
         </View>
       </TouchableOpacity>

@@ -47,7 +47,7 @@ export default function ProfileScreen() {
             <Ionicons name="person" size={48} color={theme.colors.primary} />
           </View>
           <Text style={[styles.username, { color: theme.colors.text }]}>{user.username}</Text>
-          <Text style={[styles.email, { color: theme.colors.textSecondary }]}>{user.email}</Text>
+          <Text style={[styles.email, { color: theme.colors.text }]}>{user.email}</Text>
         </View>
 
         <View style={styles.section}>
@@ -60,7 +60,7 @@ export default function ProfileScreen() {
             >
               <Ionicons name="heart" size={24} color={theme.colors.primary} />
               <Text style={[styles.favoriteText, { color: theme.colors.text }]}>Favori Takımlar</Text>
-              <Text style={[styles.favoriteCount, { color: theme.colors.textSecondary }]}>
+              <Text style={[styles.favoriteCount, { color: theme.colors.text }]}>
                 {user.favoriteTeams.length}
               </Text>
             </TouchableOpacity>
@@ -71,7 +71,7 @@ export default function ProfileScreen() {
             >
               <Ionicons name="person" size={24} color={theme.colors.primary} />
               <Text style={[styles.favoriteText, { color: theme.colors.text }]}>Favori Oyuncular</Text>
-              <Text style={[styles.favoriteCount, { color: theme.colors.textSecondary }]}>
+              <Text style={[styles.favoriteCount, { color: theme.colors.text }]}>
                 {user.favoritePlayers.length}
               </Text>
             </TouchableOpacity>
@@ -86,7 +86,7 @@ export default function ProfileScreen() {
               <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
                 Maç Başlangıç Bildirimleri
               </Text>
-              <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
+              <Text style={[styles.preferenceDescription, { color: theme.colors.text }]}>
                 Maç başlangıç bildirimleri
               </Text>
             </View>
@@ -94,7 +94,7 @@ export default function ProfileScreen() {
               <Ionicons
                 name={user.notifications.matchStart ? 'notifications' : 'notifications-off'}
                 size={24}
-                color={user.notifications.matchStart ? theme.colors.primary : theme.colors.textSecondary}
+                color={user.notifications.matchStart ? theme.colors.primary : theme.colors.text}
               />
             </TouchableOpacity>
           </View>
@@ -104,7 +104,7 @@ export default function ProfileScreen() {
               <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
                 Skor Değişikliği Bildirimleri
               </Text>
-              <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
+              <Text style={[styles.preferenceDescription, { color: theme.colors.text }]}>
                 Canlı maç skor değişiklikleri
               </Text>
             </View>
@@ -112,7 +112,7 @@ export default function ProfileScreen() {
               <Ionicons
                 name={user.notifications.scoreChange ? 'notifications' : 'notifications-off'}
                 size={24}
-                color={user.notifications.scoreChange ? theme.colors.primary : theme.colors.textSecondary}
+                color={user.notifications.scoreChange ? theme.colors.primary : theme.colors.text}
               />
             </TouchableOpacity>
           </View>
@@ -122,7 +122,7 @@ export default function ProfileScreen() {
               <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
                 Maç Sonu Bildirimleri
               </Text>
-              <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
+              <Text style={[styles.preferenceDescription, { color: theme.colors.text }]}>
                 Maç sonuç bildirimleri
               </Text>
             </View>
@@ -130,7 +130,7 @@ export default function ProfileScreen() {
               <Ionicons
                 name={user.notifications.matchEnd ? 'notifications' : 'notifications-off'}
                 size={24}
-                color={user.notifications.matchEnd ? theme.colors.primary : theme.colors.textSecondary}
+                color={user.notifications.matchEnd ? theme.colors.primary : theme.colors.text}
               />
             </TouchableOpacity>
           </View>
@@ -140,7 +140,7 @@ export default function ProfileScreen() {
               <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
                 Haber Bildirimleri
               </Text>
-              <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
+              <Text style={[styles.preferenceDescription, { color: theme.colors.text }]}>
                 Önemli haberler ve güncellemeler
               </Text>
             </View>
@@ -148,7 +148,7 @@ export default function ProfileScreen() {
               <Ionicons
                 name={user.notifications.news ? 'notifications' : 'notifications-off'}
                 size={24}
-                color={user.notifications.news ? theme.colors.primary : theme.colors.textSecondary}
+                color={user.notifications.news ? theme.colors.primary : theme.colors.text}
               />
             </TouchableOpacity>
           </View>

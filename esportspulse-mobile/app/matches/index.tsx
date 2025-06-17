@@ -8,6 +8,7 @@ import { ENDPOINTS } from '@/constants/ApiConfig';
 import { getMatches, getLiveMatches, getUpcomingMatches, getCompletedMatches } from '../../services/api';
 import { Match } from '../../types/match';
 import { formatDate } from '../../utils/dateUtils';
+import { teamLogos } from '../../assets/logos';
 
 interface Match {
   id: string;
@@ -26,7 +27,7 @@ interface Match {
 const DEFAULT_TEAM_LOGO = require('../../assets/logos/default.png');
 
 export default function MatchesScreen() {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const [matches, setMatches] = React.useState<Match[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [selectedFilter, setSelectedFilter] = React.useState('all');
@@ -66,16 +67,13 @@ export default function MatchesScreen() {
     }
   };
 
-  const renderMatchItem = ({ item }: { item: Match }) => {
-    const getTeamLogo = (teamName: string) => {
-      const logoName = teamName.toLowerCase().replace(/[^a-z0-9]/g, '');
-      try {
-        return require(`../../assets/logos/${logoName}.png`);
-      } catch {
-        return DEFAULT_TEAM_LOGO;
-      }
-    };
+  const getTeamLogo = (teamName: string) => {
+    if (!teamName) return teamLogos['default'];
+    const key = teamName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return teamLogos[key] || teamLogos['default'];
+  };
 
+  const renderMatchItem = ({ item }: { item: Match }) => {
     return (
       <TouchableOpacity 
         style={[styles.matchCard, { backgroundColor: theme.colors.card }]}
@@ -95,7 +93,7 @@ export default function MatchesScreen() {
             <Image 
               source={getTeamLogo(item.homeTeam)}
               style={styles.teamLogo}
-              defaultSource={DEFAULT_TEAM_LOGO}
+              defaultSource={teamLogos['default']}
             />
             <Text style={[styles.teamName, { color: theme.colors.text }]} numberOfLines={1}>
               {item.homeTeam}
@@ -113,7 +111,7 @@ export default function MatchesScreen() {
             <Image 
               source={getTeamLogo(item.awayTeam)}
               style={styles.teamLogo}
-              defaultSource={DEFAULT_TEAM_LOGO}
+              defaultSource={teamLogos['default']}
             />
             <Text style={[styles.teamName, { color: theme.colors.text }]} numberOfLines={1}>
               {item.awayTeam}
@@ -146,15 +144,13 @@ export default function MatchesScreen() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
-        <Text style={[styles.loadingText, { color: theme.colors.text }]}>Yükleniyor...</Text>
-      </SafeAreaView>
-    );
-  }
-
-  if (!matches.length) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
-        <Text style={[styles.loadingText, { color: theme.colors.text }]}>Maç verisi alınamadı. Lütfen bağlantınızı ve API sunucunuzu kontrol edin.</Text>
+        <View style={styles.filterContainer}>
+          {renderFilterButton('all', 'Tümü')}
+          {renderFilterButton('live', 'Canlı')}
+          {renderFilterButton('upcoming', 'Yaklaşan')}
+          {renderFilterButton('completed', 'Tamamlanan')}
+        </View>
+        <ActivityIndicator size="large" color={theme.colors.primary} style={{ marginTop: 32 }} />
       </SafeAreaView>
     );
   }
@@ -167,13 +163,21 @@ export default function MatchesScreen() {
         {renderFilterButton('upcoming', 'Yaklaşan')}
         {renderFilterButton('completed', 'Tamamlanan')}
       </View>
-      <FlatList
-        data={matches}
-        renderItem={renderMatchItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-      />
+      {matches.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="trophy-outline" size={64} color={theme.colors.primary} style={{ marginBottom: 16 }} />
+          <Text style={[styles.loadingText, { color: theme.colors.text }]}>Maç verisi bulunamadı</Text>
+          <Text style={[styles.emptySubtext, { color: theme.colors.text, opacity: 0.7 }]}>Bu kategoride şu anda maç yok.</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={matches}
+          renderItem={renderMatchItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -252,5 +256,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     marginTop: 20,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 48,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 8,
   },
 }); 

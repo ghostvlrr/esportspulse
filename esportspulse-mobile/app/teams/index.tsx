@@ -7,6 +7,7 @@ import { Link, useRouter } from 'expo-router';
 import { ENDPOINTS } from '@/constants/ApiConfig';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Team } from '../../types/team';
+import { teamLogos } from '../../assets/logos';
 
 interface Team {
   id: string;
@@ -21,7 +22,7 @@ interface Team {
 const DEFAULT_TEAM_LOGO = require('../../assets/logos/default.png');
 
 export default function TeamsScreen() {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const [teams, setTeams] = React.useState<Team[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -48,16 +49,13 @@ export default function TeamsScreen() {
     team.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const renderTeamItem = ({ item }: { item: Team }) => {
-    const getTeamLogo = (teamName: string) => {
-      const logoName = teamName.toLowerCase().replace(/[^a-z0-9]/g, '');
-      try {
-        return require(`../../assets/logos/${logoName}.png`);
-      } catch {
-        return DEFAULT_TEAM_LOGO;
-      }
-    };
+  const getTeamLogo = (teamName: string) => {
+    if (!teamName) return teamLogos['default'];
+    const key = teamName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return teamLogos[key] || teamLogos['default'];
+  };
 
+  const renderTeamItem = ({ item }: { item: Team }) => {
     return (
       <TouchableOpacity 
         style={[styles.teamCard, { backgroundColor: theme.colors.surface }]}
@@ -66,31 +64,31 @@ export default function TeamsScreen() {
         <Image 
           source={getTeamLogo(item.name)}
           style={styles.teamLogo}
-          defaultSource={DEFAULT_TEAM_LOGO}
+          defaultSource={teamLogos['default']}
         />
         <View style={styles.teamInfo}>
           <Text style={[styles.teamName, { color: theme.colors.text }]} numberOfLines={1}>
             {item.name}
           </Text>
-          <Text style={[styles.teamRegion, { color: theme.colors.textSecondary }]}>
+          <Text style={[styles.teamRegion, { color: theme.colors.text }]}>
             {item.region}
           </Text>
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-              <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Sıralama</Text>
+              <Text style={[styles.statLabel, { color: theme.colors.text }]}>Sıralama</Text>
               <Text style={[styles.statValue, { color: theme.colors.text }]}>#{item.ranking}</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>G</Text>
+              <Text style={[styles.statLabel, { color: theme.colors.text }]}>G</Text>
               <Text style={[styles.statValue, { color: theme.colors.text }]}>{item.wins}</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>M</Text>
+              <Text style={[styles.statLabel, { color: theme.colors.text }]}>M</Text>
               <Text style={[styles.statValue, { color: theme.colors.text }]}>{item.losses}</Text>
             </View>
           </View>
         </View>
-        <Ionicons name="chevron-forward" size={24} color={theme.colors.textSecondary} />
+        <Ionicons name="chevron-forward" size={24} color={theme.colors.text} />
       </TouchableOpacity>
     );
   };
@@ -106,11 +104,11 @@ export default function TeamsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={[styles.searchContainer, { backgroundColor: theme.colors.surface }]}>
-        <Ionicons name="search" size={20} color={theme.colors.textSecondary} />
+        <Ionicons name="search" size={20} color={theme.colors.text} />
         <TextInput
           style={[styles.searchInput, { color: theme.colors.text }]}
           placeholder="Takım ara..."
-          placeholderTextColor={theme.colors.textSecondary}
+          placeholderTextColor={theme.colors.text}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />

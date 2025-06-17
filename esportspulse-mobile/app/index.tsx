@@ -96,7 +96,7 @@ export default function HomeScreen() {
                 <Text style={[styles.matchTeams, { color: theme.colors.text }]}>
                   {match.homeTeam} vs {match.awayTeam}
                 </Text>
-                <Text style={[styles.matchDate, { color: theme.colors.textSecondary }]}>
+                <Text style={[styles.matchDate, { color: theme.colors.text }]}>
                   {match.date}
                 </Text>
                 <Text style={[styles.matchStatus, { color: theme.colors.primary }]}>
@@ -124,10 +124,10 @@ export default function HomeScreen() {
               <Image source={{ uri: item.imageUrl }} style={styles.newsImage} />
               <View style={styles.newsContent}>
                 <Text style={[styles.newsTitle, { color: theme.colors.text }]}>{item.title}</Text>
-                <Text style={[styles.newsSummary, { color: theme.colors.textSecondary }]}>
+                <Text style={[styles.newsSummary, { color: theme.colors.text }]}>
                   {item.summary}
                 </Text>
-                <Text style={[styles.newsDate, { color: theme.colors.textSecondary }]}>
+                <Text style={[styles.newsDate, { color: theme.colors.text }]}>
                   {item.date}
                 </Text>
               </View>
