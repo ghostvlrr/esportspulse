@@ -3,6 +3,16 @@ import { useColorScheme } from 'react-native';
 import { darkTheme, lightTheme } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 
+const TABS = [
+  { name: 'Ana Sayfa', icon: 'home' as const, route: '/' },
+  { name: 'Maçlar', icon: 'trophy' as const, route: '/matches' },
+  { name: 'Takımlar', icon: 'people' as const, route: '/teams' },
+  { name: 'Haberler', icon: 'newspaper' as const, route: '/news' },
+  { name: 'Favoriler', icon: 'heart' as const, route: '/favorites' },
+  { name: 'Bildirimler', icon: 'notifications' as const, route: '/notifications' },
+  { name: 'Profil', icon: 'person' as const, route: '/profile' },
+];
+
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
@@ -44,62 +54,16 @@ export default function TabLayout() {
           fontWeight: '600',
         },
       }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Ana Sayfa',
-          tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="matches/index"
-        options={{
-          title: 'Maçlar',
-          tabBarIcon: ({ color, size }) => <Ionicons name="trophy" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="teams/index"
-        options={{
-          title: 'Takımlar',
-          tabBarIcon: ({ color, size }) => <Ionicons name="people" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="news/index"
-        options={{
-          title: 'Haberler',
-          tabBarIcon: ({ color, size }) => <Ionicons name="newspaper" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="events/index"
-        options={{
-          title: 'Etkinlikler',
-          tabBarIcon: ({ color, size }) => <Ionicons name="calendar" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="favorites/index"
-        options={{
-          title: 'Favoriler',
-          tabBarIcon: ({ color, size }) => <Ionicons name="heart" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="notifications/index"
-        options={{
-          title: 'Bildirimler',
-          tabBarIcon: ({ color, size }) => <Ionicons name="notifications" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile/index"
-        options={{
-          title: 'Profil',
-          tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} />,
-        }}
-      />
+      {TABS.map((tab) => (
+        <Tabs.Screen
+          key={tab.route}
+          name={tab.route}
+          options={{
+            title: tab.name,
+            tabBarIcon: ({ color, size }) => <Ionicons name={tab.icon} size={size} color={color} />,
+          }}
+        />
+      ))}
     </Tabs>
   );
 }

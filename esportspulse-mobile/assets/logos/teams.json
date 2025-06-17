@@ -1,0 +1,522 @@
+[
+  {
+    "name": "FNATIC",
+    "logoPath": "/logos/fnatic.png"
+  },
+  {
+    "name": "Team Heretics",
+    "logoPath": "/logos/team_heretics.png"
+  },
+  {
+    "name": "BBL PCIFIC",
+    "logoPath": "/logos/bbl_pcific.png"
+  },
+  {
+    "name": "MOUZ",
+    "logoPath": "/logos/mouz.png"
+  },
+  {
+    "name": "Enterprise Esports",
+    "logoPath": "/logos/enterprise_esports.png"
+  },
+  {
+    "name": "BBL Esports",
+    "logoPath": "/logos/bbl_esports.png"
+  },
+  {
+    "name": "CGN Esports",
+    "logoPath": "/logos/cgn_esports.png"
+  },
+  {
+    "name": "Team Liquid",
+    "logoPath": "/logos/team_liquid.png"
+  },
+  {
+    "name": "Eintracht Frankfurt",
+    "logoPath": "/logos/eintracht_frankfurt.png"
+  },
+  {
+    "name": "GoNext Esports",
+    "logoPath": "/logos/gonext_esports.png"
+  },
+  {
+    "name": "G2 Esports",
+    "logoPath": "/logos/g2_esports.png"
+  },
+  {
+    "name": "NRG",
+    "logoPath": "/logos/nrg.png"
+  },
+  {
+    "name": "Sentinels",
+    "logoPath": "/logos/sentinels.png"
+  },
+  {
+    "name": "ENVY",
+    "logoPath": "/logos/envy.png"
+  },
+  {
+    "name": "100 Thieves",
+    "logoPath": "/logos/100_thieves.png"
+  },
+  {
+    "name": "Burger Boyz",
+    "logoPath": "/logos/burger_boyz.png"
+  },
+  {
+    "name": "Chet's Pets",
+    "logoPath": "/logos/chet_s_pets.png"
+  },
+  {
+    "name": "TSM",
+    "logoPath": "/logos/tsm.png"
+  },
+  {
+    "name": "Cloud9",
+    "logoPath": "/logos/cloud9.png"
+  },
+  {
+    "name": "Ambrosia",
+    "logoPath": "/logos/ambrosia.png"
+  },
+  {
+    "name": "MIBR",
+    "logoPath": "/logos/mibr.png"
+  },
+  {
+    "name": "Corinthians Esports",
+    "logoPath": "/logos/corinthians_esports.png"
+  },
+  {
+    "name": "RED Canids",
+    "logoPath": "/logos/red_canids.png"
+  },
+  {
+    "name": "Los Grandes",
+    "logoPath": "/logos/los_grandes.png"
+  },
+  {
+    "name": "LOUD",
+    "logoPath": "/logos/loud.png"
+  },
+  {
+    "name": "Stellae Gaming",
+    "logoPath": "/logos/stellae_gaming.png"
+  },
+  {
+    "name": "2Game Esports",
+    "logoPath": "/logos/2game_esports.png"
+  },
+  {
+    "name": "FURIA",
+    "logoPath": "/logos/furia.png"
+  },
+  {
+    "name": "MIBR GC",
+    "logoPath": "/logos/mibr_gc.png"
+  },
+  {
+    "name": "PEEK",
+    "logoPath": "/logos/peek.png"
+  },
+  {
+    "name": "Paper Rex",
+    "logoPath": "/logos/paper_rex.png"
+  },
+  {
+    "name": "FULL SENSE",
+    "logoPath": "/logos/full_sense.png"
+  },
+  {
+    "name": "Motiv Esports",
+    "logoPath": "/logos/motiv_esports.png"
+  },
+  {
+    "name": "BOOM Esports",
+    "logoPath": "/logos/boom_esports.png"
+  },
+  {
+    "name": "Rex Regum Qeon",
+    "logoPath": "/logos/rex_regum_qeon.png"
+  },
+  {
+    "name": "Revenant XSpark",
+    "logoPath": "/logos/revenant_xspark.png"
+  },
+  {
+    "name": "Velocity Gaming",
+    "logoPath": "/logos/velocity_gaming.png"
+  },
+  {
+    "name": "Fancy United Esports",
+    "logoPath": "/logos/fancy_united_esports.png"
+  },
+  {
+    "name": "NAOS",
+    "logoPath": "/logos/naos.png"
+  },
+  {
+    "name": "ZOL Esports",
+    "logoPath": "/logos/zol_esports.png"
+  },
+  {
+    "name": "Gen.G",
+    "logoPath": "/logos/gen_g.png"
+  },
+  {
+    "name": "DRX",
+    "logoPath": "/logos/drx.png"
+  },
+  {
+    "name": "Nongshim RedForce",
+    "logoPath": "/logos/nongshim_redforce.png"
+  },
+  {
+    "name": "T1",
+    "logoPath": "/logos/t1.png"
+  },
+  {
+    "name": "FEARX",
+    "logoPath": "/logos/fearx.png"
+  },
+  {
+    "name": "T1 Academy",
+    "logoPath": "/logos/t1_academy.png"
+  },
+  {
+    "name": "SLT Seongnam",
+    "logoPath": "/logos/slt_seongnam.png"
+  },
+  {
+    "name": "Blater\t\t\t\t\t\t\t\t\t\t\tSouth Korea",
+    "logoPath": "/logos/blater_south_korea.png"
+  },
+  {
+    "name": "CNJ Esports",
+    "logoPath": "/logos/cnj_esports.png"
+  },
+  {
+    "name": "OLY\t\t\t\t\t\t\t\t\t\t\tSouth Korea",
+    "logoPath": "/logos/oly_south_korea.png"
+  },
+  {
+    "name": "EDward Gaming",
+    "logoPath": "/logos/edward_gaming.png"
+  },
+  {
+    "name": "Xi Lai Gaming",
+    "logoPath": "/logos/xi_lai_gaming.png"
+  },
+  {
+    "name": "Bilibili Gaming",
+    "logoPath": "/logos/bilibili_gaming.png"
+  },
+  {
+    "name": "Trace Esports",
+    "logoPath": "/logos/trace_esports.png"
+  },
+  {
+    "name": "Wolves Esports",
+    "logoPath": "/logos/wolves_esports.png"
+  },
+  {
+    "name": "Nova Esports",
+    "logoPath": "/logos/nova_esports.png"
+  },
+  {
+    "name": "Rare Atom",
+    "logoPath": "/logos/rare_atom.png"
+  },
+  {
+    "name": "Titan Esports Club",
+    "logoPath": "/logos/titan_esports_club.png"
+  },
+  {
+    "name": "Chosen Clique Gaming",
+    "logoPath": "/logos/chosen_clique_gaming.png"
+  },
+  {
+    "name": "Dragon Ranger Gaming",
+    "logoPath": "/logos/dragon_ranger_gaming.png"
+  },
+  {
+    "name": "RIDDLE ORDER",
+    "logoPath": "/logos/riddle_order.png"
+  },
+  {
+    "name": "FENNEL",
+    "logoPath": "/logos/fennel.png"
+  },
+  {
+    "name": "NOEZ FOXX",
+    "logoPath": "/logos/noez_foxx.png"
+  },
+  {
+    "name": "ZETA DIVISION",
+    "logoPath": "/logos/zeta_division.png"
+  },
+  {
+    "name": "QT DIG∞",
+    "logoPath": "/logos/qt_dig.png"
+  },
+  {
+    "name": "REJECT",
+    "logoPath": "/logos/reject.png"
+  },
+  {
+    "name": "DetonatioN FocusMe",
+    "logoPath": "/logos/detonation_focusme.png"
+  },
+  {
+    "name": "Murash Gaming",
+    "logoPath": "/logos/murash_gaming.png"
+  },
+  {
+    "name": "BC SWELL",
+    "logoPath": "/logos/bc_swell.png"
+  },
+  {
+    "name": "SCARZ",
+    "logoPath": "/logos/scarz.png"
+  },
+  {
+    "name": "KRÜ Esports",
+    "logoPath": "/logos/kr_esports.png"
+  },
+  {
+    "name": "LEVIATÁN Academy",
+    "logoPath": "/logos/leviat_n_academy.png"
+  },
+  {
+    "name": "OXEN",
+    "logoPath": "/logos/oxen.png"
+  },
+  {
+    "name": "9z Team",
+    "logoPath": "/logos/9z_team.png"
+  },
+  {
+    "name": "Farenvehn",
+    "logoPath": "/logos/farenvehn.png"
+  },
+  {
+    "name": "Dolphins Gaming",
+    "logoPath": "/logos/dolphins_gaming.png"
+  },
+  {
+    "name": "MixPe\t\t\t\t\t\t\t\t\t\t\tChile",
+    "logoPath": "/logos/mixpe_chile.png"
+  },
+  {
+    "name": "Kaos Latin Gamers",
+    "logoPath": "/logos/kaos_latin_gamers.png"
+  },
+  {
+    "name": "Retiraos\t\t\t\t\t\t\t\t\t\t\tInternational",
+    "logoPath": "/logos/retiraos_international.png"
+  },
+  {
+    "name": "Warning!\t\t\t\t\t\t\t\t\t\t\tInternational",
+    "logoPath": "/logos/warning_international.png"
+  },
+  {
+    "name": "E-Xolos LAZER",
+    "logoPath": "/logos/e_xolos_lazer.png"
+  },
+  {
+    "name": "Six Karma",
+    "logoPath": "/logos/six_karma.png"
+  },
+  {
+    "name": "UFOXSkalle\t\t\t\t\t\t\t\t\t\t\tEcuador",
+    "logoPath": "/logos/ufoxskalle_ecuador.png"
+  },
+  {
+    "name": "FUSION",
+    "logoPath": "/logos/fusion.png"
+  },
+  {
+    "name": "EXOTICK ESPORTS\t\t\t\t\t\t\t\t\t\t\tColombia",
+    "logoPath": "/logos/exotick_esports_colombia.png"
+  },
+  {
+    "name": "AB3 Esports",
+    "logoPath": "/logos/ab3_esports.png"
+  },
+  {
+    "name": "Farmakas\t\t\t\t\t\t\t\t\t\t\tInternational",
+    "logoPath": "/logos/farmakas_international.png"
+  },
+  {
+    "name": "KTANA Esports",
+    "logoPath": "/logos/ktana_esports.png"
+  },
+  {
+    "name": "Solovinos\t\t\t\t\t\t\t\t\t\t\tInternational",
+    "logoPath": "/logos/solovinos_international.png"
+  },
+  {
+    "name": "SadHub Esports",
+    "logoPath": "/logos/sadhub_esports.png"
+  },
+  {
+    "name": "E-KING",
+    "logoPath": "/logos/e_king.png"
+  },
+  {
+    "name": "Long and Friends\t\t\t\t\t\t\t\t\t\t\tAustralia",
+    "logoPath": "/logos/long_and_friends_australia.png"
+  },
+  {
+    "name": "Full House",
+    "logoPath": "/logos/full_house.png"
+  },
+  {
+    "name": "BOBO\t\t\t\t\t\t\t\t\t\t\tAustralia",
+    "logoPath": "/logos/bobo_australia.png"
+  },
+  {
+    "name": "Hornswogglers\t\t\t\t\t\t\t\t\t\t\tAustralia",
+    "logoPath": "/logos/hornswogglers_australia.png"
+  },
+  {
+    "name": "OG\t\t\t\t\t\t\t\t\t\t\tAustralia",
+    "logoPath": "/logos/og_australia.png"
+  },
+  {
+    "name": "DXA Esports",
+    "logoPath": "/logos/dxa_esports.png"
+  },
+  {
+    "name": "Peace And Love\t\t\t\t\t\t\t\t\t\t\tAustralia",
+    "logoPath": "/logos/peace_and_love_australia.png"
+  },
+  {
+    "name": "iPGN",
+    "logoPath": "/logos/ipgn.png"
+  },
+  {
+    "name": "EDGE\t\t\t\t\t\t\t\t\t\t\tAustralia",
+    "logoPath": "/logos/edge_australia.png"
+  },
+  {
+    "name": "The Ultimates",
+    "logoPath": "/logos/the_ultimates.png"
+  },
+  {
+    "name": "Team RA'AD",
+    "logoPath": "/logos/team_ra_ad.png"
+  },
+  {
+    "name": "R8 Esports",
+    "logoPath": "/logos/r8_esports.png"
+  },
+  {
+    "name": "Twisted Minds",
+    "logoPath": "/logos/twisted_minds.png"
+  },
+  {
+    "name": "NASR Esports",
+    "logoPath": "/logos/nasr_esports.png"
+  },
+  {
+    "name": "AlQadsiah Esports",
+    "logoPath": "/logos/alqadsiah_esports.png"
+  },
+  {
+    "name": "RvN",
+    "logoPath": "/logos/rvn.png"
+  },
+  {
+    "name": "Geekay Esports",
+    "logoPath": "/logos/geekay_esports.png"
+  },
+  {
+    "name": "NOBLES",
+    "logoPath": "/logos/nobles.png"
+  },
+  {
+    "name": "Stallions Esports\t\t\t\t\t\t\t\t\t\t\tSaudi Arabia",
+    "logoPath": "/logos/stallions_esports_saudi_arabia.png"
+  },
+  {
+    "name": "Shopify Rebellion Gold",
+    "logoPath": "/logos/shopify_rebellion_gold.png"
+  },
+  {
+    "name": "Team Liquid Brazil",
+    "logoPath": "/logos/team_liquid_brazil.png"
+  },
+  {
+    "name": "KRÜ BLAZE",
+    "logoPath": "/logos/kr_blaze.png"
+  },
+  {
+    "name": "Team Falcons Vega",
+    "logoPath": "/logos/team_falcons_vega.png"
+  },
+  {
+    "name": "G2 Gozen",
+    "logoPath": "/logos/g2_gozen.png"
+  },
+  {
+    "name": "MIBR GC",
+    "logoPath": "/logos/mibr_gc.png"
+  },
+  {
+    "name": "YFP X",
+    "logoPath": "/logos/yfp_x.png"
+  },
+  {
+    "name": "GIANTX GC",
+    "logoPath": "/logos/giantx_gc.png"
+  },
+  {
+    "name": "Twisted Minds Orchid",
+    "logoPath": "/logos/twisted_minds_orchid.png"
+  },
+  {
+    "name": "Wadadaa",
+    "logoPath": "/logos/wadadaa.png"
+  },
+  {
+    "name": "Maryville University",
+    "logoPath": "/logos/maryville_university.png"
+  },
+  {
+    "name": "Winthrop University",
+    "logoPath": "/logos/winthrop_university.png"
+  },
+  {
+    "name": "Northwood University",
+    "logoPath": "/logos/northwood_university.png"
+  },
+  {
+    "name": "UST Esports",
+    "logoPath": "/logos/ust_esports.png"
+  },
+  {
+    "name": "Cumberland Phoenix",
+    "logoPath": "/logos/cumberland_phoenix.png"
+  },
+  {
+    "name": "TAMU Maroon",
+    "logoPath": "/logos/tamu_maroon.png"
+  },
+  {
+    "name": "St. Clair Saints",
+    "logoPath": "/logos/st_clair_saints.png"
+  },
+  {
+    "name": "San Jose State University",
+    "logoPath": "/logos/san_jose_state_university.png"
+  },
+  {
+    "name": "UC Irvine",
+    "logoPath": "/logos/uc_irvine.png"
+  },
+  {
+    "name": "Fisher Navy",
+    "logoPath": "/logos/fisher_navy.png"
+  }
+]

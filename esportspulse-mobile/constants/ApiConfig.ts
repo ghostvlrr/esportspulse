@@ -18,4 +18,7 @@ export const ENDPOINTS = {
   // Turnuvalar
   tournaments: '/event',
   tournament: (id: string) => `/event/${id}`,
+
+  // Bildirimler
+  notifications: '/notifications',
 };

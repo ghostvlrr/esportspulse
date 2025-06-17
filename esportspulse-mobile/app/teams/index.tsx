@@ -1,9 +1,12 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, TextInput } from 'react-native';
-import { useTheme } from '@/hooks/useTheme';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, TextInput, ActivityIndicator } from 'react-native';
+import { useTheme } from '@react-navigation/native';
 import { apiService } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
+import { ENDPOINTS } from '@/constants/ApiConfig';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Team } from '../../types/team';
 
 interface Team {
   id: string;
@@ -15,11 +18,14 @@ interface Team {
   losses: number;
 }
 
+const DEFAULT_TEAM_LOGO = require('../../assets/logos/default.png');
+
 export default function TeamsScreen() {
   const { theme } = useTheme();
   const [teams, setTeams] = React.useState<Team[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState('');
+  const router = useRouter();
 
   React.useEffect(() => {
     fetchTeams();
@@ -27,7 +33,7 @@ export default function TeamsScreen() {
 
   const fetchTeams = async () => {
     try {
-      const response = await apiService.get<any>('/team/list');
+      const response = await apiService.get<any>(ENDPOINTS.teams);
       if (!response.error) {
         setTeams(response.data.data || response.data);
       }
@@ -42,32 +48,52 @@ export default function TeamsScreen() {
     team.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const renderTeamItem = ({ item }: { item: Team }) => (
-    <View style={[styles.teamCard, { backgroundColor: theme.colors.surface }]}>
-      <Image source={{ uri: item.logo }} style={styles.teamLogo} />
-      <View style={styles.teamInfo}>
-        <Text style={[styles.teamName, { color: theme.colors.text }]}>{item.name}</Text>
-        <Text style={[styles.teamRegion, { color: theme.colors.textSecondary }]}>
-          {item.region}
-        </Text>
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Sıralama</Text>
-            <Text style={[styles.statValue, { color: theme.colors.text }]}>#{item.ranking}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>G</Text>
-            <Text style={[styles.statValue, { color: theme.colors.text }]}>{item.wins}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>M</Text>
-            <Text style={[styles.statValue, { color: theme.colors.text }]}>{item.losses}</Text>
+  const renderTeamItem = ({ item }: { item: Team }) => {
+    const getTeamLogo = (teamName: string) => {
+      const logoName = teamName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      try {
+        return require(`../../assets/logos/${logoName}.png`);
+      } catch {
+        return DEFAULT_TEAM_LOGO;
+      }
+    };
+
+    return (
+      <TouchableOpacity 
+        style={[styles.teamCard, { backgroundColor: theme.colors.surface }]}
+        onPress={() => router.push(`/team/${item.id}`)}
+      >
+        <Image 
+          source={getTeamLogo(item.name)}
+          style={styles.teamLogo}
+          defaultSource={DEFAULT_TEAM_LOGO}
+        />
+        <View style={styles.teamInfo}>
+          <Text style={[styles.teamName, { color: theme.colors.text }]} numberOfLines={1}>
+            {item.name}
+          </Text>
+          <Text style={[styles.teamRegion, { color: theme.colors.textSecondary }]}>
+            {item.region}
+          </Text>
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Sıralama</Text>
+              <Text style={[styles.statValue, { color: theme.colors.text }]}>#{item.ranking}</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>G</Text>
+              <Text style={[styles.statValue, { color: theme.colors.text }]}>{item.wins}</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>M</Text>
+              <Text style={[styles.statValue, { color: theme.colors.text }]}>{item.losses}</Text>
+            </View>
           </View>
         </View>
-      </View>
-      <Ionicons name="chevron-forward" size={24} color={theme.colors.textSecondary} />
-    </View>
-  );
+        <Ionicons name="chevron-forward" size={24} color={theme.colors.textSecondary} />
+      </TouchableOpacity>
+    );
+  };
 
   if (loading) {
     return (

@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { VLR_API_BASE, ENDPOINTS } from '@/constants/ApiConfig';
 
-const BASE_URL = 'https://vlrggapi.vercel.app';
+const BASE_URL = VLR_API_BASE;
 
 interface ApiResponse<T> {
   data: T;

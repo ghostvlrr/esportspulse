@@ -30,7 +30,6 @@ import ScoreboardIcon from '@mui/icons-material/Scoreboard';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import DoneAllIcon from '@mui/icons-material/DoneAll';
 import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';

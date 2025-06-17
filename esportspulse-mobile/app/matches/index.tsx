@@ -1,9 +1,13 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, SafeAreaView } from 'react-native';
-import { useTheme } from '@/hooks/useTheme';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, SafeAreaView, ActivityIndicator } from 'react-native';
+import { useTheme } from '@react-navigation/native';
 import { apiService } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
+import { ENDPOINTS } from '@/constants/ApiConfig';
+import { getMatches, getLiveMatches, getUpcomingMatches, getCompletedMatches } from '../../services/api';
+import { Match } from '../../types/match';
+import { formatDate } from '../../utils/dateUtils';
 
 interface Match {
   id: string;
@@ -15,13 +19,18 @@ interface Match {
   tournament: string;
   homeTeamLogo: string;
   awayTeamLogo: string;
+  matchPage: string;
+  timeUntil: string;
 }
+
+const DEFAULT_TEAM_LOGO = require('../../assets/logos/default.png');
 
 export default function MatchesScreen() {
   const { theme } = useTheme();
   const [matches, setMatches] = React.useState<Match[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [selectedFilter, setSelectedFilter] = React.useState('all');
+  const router = useRouter();
 
   React.useEffect(() => {
     fetchMatches();
@@ -29,18 +38,24 @@ export default function MatchesScreen() {
 
   const fetchMatches = async () => {
     try {
-      const response = await apiService.get<any>('/match/list');
+      let endpoint = ENDPOINTS.upcoming;
+      if (selectedFilter === 'live') endpoint = ENDPOINTS.live;
+      else if (selectedFilter === 'completed') endpoint = ENDPOINTS.completed;
+      const response = await apiService.get<any>(endpoint);
       if (!response.error) {
-        const mappedMatches = (response.data.data || []).map((item: any) => ({
-          id: String(item.id),
+        const segments = response.data?.data?.segments || [];
+        const mappedMatches = segments.map((item: any, idx: number) => ({
+          id: String(idx),
           homeTeam: item.team1,
           awayTeam: item.team2,
-          date: item.time,
-          status: item.status,
-          tournament: item.event,
-          homeTeamLogo: item.team1_logo,
-          awayTeamLogo: item.team2_logo,
-          score: item.score || '',
+          date: item.unix_timestamp,
+          status: item.match_series,
+          tournament: item.match_event,
+          homeTeamLogo: item.flag1 ? `https://owcdn.net/img/${item.flag1}.png` : DEFAULT_TEAM_LOGO,
+          awayTeamLogo: item.flag2 ? `https://owcdn.net/img/${item.flag2}.png` : DEFAULT_TEAM_LOGO,
+          score: `${item.score1 || '0'} - ${item.score2 || '0'}`,
+          matchPage: item.match_page,
+          timeUntil: item.time_until_match,
         }));
         setMatches(mappedMatches);
       }
@@ -51,35 +66,63 @@ export default function MatchesScreen() {
     }
   };
 
-  const renderMatchItem = ({ item }: { item: Match }) => (
-    <Link href={`/match/${item.id}`} asChild>
-      <TouchableOpacity style={[styles.matchCard, { backgroundColor: theme.colors.surface }]}>
+  const renderMatchItem = ({ item }: { item: Match }) => {
+    const getTeamLogo = (teamName: string) => {
+      const logoName = teamName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      try {
+        return require(`../../assets/logos/${logoName}.png`);
+      } catch {
+        return DEFAULT_TEAM_LOGO;
+      }
+    };
+
+    return (
+      <TouchableOpacity 
+        style={[styles.matchCard, { backgroundColor: theme.colors.card }]}
+        onPress={() => router.push(`/match/${item.id}`)}
+      >
         <View style={styles.matchHeader}>
-          <Text style={[styles.tournamentName, { color: theme.colors.textSecondary }]}>
+          <Text style={[styles.tournamentName, { color: theme.colors.text }]}>
             {item.tournament}
           </Text>
-          <Text style={[styles.matchDate, { color: theme.colors.textSecondary }]}>{item.date}</Text>
+          <Text style={[styles.matchTime, { color: theme.colors.text }]}>
+            {formatDate(item.date)}
+          </Text>
         </View>
 
         <View style={styles.teamsContainer}>
           <View style={styles.teamInfo}>
-            <Image source={{ uri: item.homeTeamLogo }} style={styles.teamLogo} />
-            <Text style={[styles.teamName, { color: theme.colors.text }]}>{item.homeTeam}</Text>
+            <Image 
+              source={getTeamLogo(item.homeTeam)}
+              style={styles.teamLogo}
+              defaultSource={DEFAULT_TEAM_LOGO}
+            />
+            <Text style={[styles.teamName, { color: theme.colors.text }]} numberOfLines={1}>
+              {item.homeTeam}
+            </Text>
           </View>
 
-          <View style={styles.scoreContainer}>
-            <Text style={[styles.score, { color: theme.colors.text }]}>{item.score}</Text>
-            <Text style={[styles.status, { color: theme.colors.primary }]}>{item.status}</Text>
+          <View style={styles.matchInfo}>
+            <Text style={[styles.vsText, { color: theme.colors.text }]}>VS</Text>
+            <Text style={[styles.matchStatus, { color: theme.colors.text }]}>
+              {item.status}
+            </Text>
           </View>
 
           <View style={styles.teamInfo}>
-            <Image source={{ uri: item.awayTeamLogo }} style={styles.teamLogo} />
-            <Text style={[styles.teamName, { color: theme.colors.text }]}>{item.awayTeam}</Text>
+            <Image 
+              source={getTeamLogo(item.awayTeam)}
+              style={styles.teamLogo}
+              defaultSource={DEFAULT_TEAM_LOGO}
+            />
+            <Text style={[styles.teamName, { color: theme.colors.text }]} numberOfLines={1}>
+              {item.awayTeam}
+            </Text>
           </View>
         </View>
       </TouchableOpacity>
-    </Link>
-  );
+    );
+  };
 
   const renderFilterButton = (filter: string, label: string) => (
     <TouchableOpacity
@@ -171,7 +214,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  matchDate: {
+  matchTime: {
     fontSize: 14,
   },
   teamsContainer: {
@@ -193,16 +236,15 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
-  scoreContainer: {
+  matchInfo: {
     alignItems: 'center',
     marginHorizontal: 16,
   },
-  score: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 4,
+  vsText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
-  status: {
+  matchStatus: {
     fontSize: 12,
     fontWeight: '500',
   },

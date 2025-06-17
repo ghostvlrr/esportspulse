@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiService } from './api';
+import { ENDPOINTS } from '@/constants/ApiConfig';
 
 export interface Notification {
   id: string;
@@ -43,7 +44,7 @@ class NotificationService {
 
   private async fetchNotifications() {
     try {
-      const response = await apiService.get<Notification[]>('/notifications');
+      const response = await apiService.get<Notification[]>(ENDPOINTS.notifications);
       if (!response.error) {
         this.notifications = response.data;
         await this.saveNotifications();
@@ -64,7 +65,7 @@ class NotificationService {
 
   async markAsRead(notificationId: string) {
     try {
-      const response = await apiService.put<{ success: boolean }>(`/notifications/${notificationId}/read`, {});
+      const response = await apiService.put<{ success: boolean }>(`${ENDPOINTS.notifications}/${notificationId}/read`, {});
       if (!response.error && response.data.success) {
         this.notifications = this.notifications.map((notification) =>
           notification.id === notificationId ? { ...notification, read: true } : notification
@@ -79,7 +80,7 @@ class NotificationService {
 
   async markAllAsRead() {
     try {
-      const response = await apiService.put<{ success: boolean }>('/notifications/read-all', {});
+      const response = await apiService.put<{ success: boolean }>(`${ENDPOINTS.notifications}/read-all`, {});
       if (!response.error && response.data.success) {
         this.notifications = this.notifications.map((notification) => ({
           ...notification,
@@ -95,7 +96,7 @@ class NotificationService {
 
   async deleteNotification(notificationId: string) {
     try {
-      const response = await apiService.delete<{ success: boolean }>(`/notifications/${notificationId}`);
+      const response = await apiService.delete<{ success: boolean }>(`${ENDPOINTS.notifications}/${notificationId}`);
       if (!response.error && response.data.success) {
         this.notifications = this.notifications.filter((notification) => notification.id !== notificationId);
         await this.saveNotifications();
@@ -108,7 +109,7 @@ class NotificationService {
 
   async clearAllNotifications() {
     try {
-      const response = await apiService.delete<{ success: boolean }>('/notifications');
+      const response = await apiService.delete<{ success: boolean }>(ENDPOINTS.notifications);
       if (!response.error && response.data.success) {
         this.notifications = [];
         await this.saveNotifications();
