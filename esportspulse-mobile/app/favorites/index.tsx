@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, SafeAreaView } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { apiService } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
@@ -109,15 +109,15 @@ export default function FavoritesScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <Text style={[styles.loadingText, { color: theme.colors.text }]}>Yükleniyor...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (favorites.length === 0) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={styles.emptyContainer}>
           <Ionicons name="heart-outline" size={64} color={theme.colors.textSecondary} />
           <Text style={[styles.emptyText, { color: theme.colors.text }]}>
@@ -127,12 +127,12 @@ export default function FavoritesScreen() {
             Favori eklemek için ilgili sayfaları ziyaret edin
           </Text>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.filterContainer}>
         {renderFilterButton('all', 'Tümü')}
         {renderFilterButton('team', 'Takımlar')}
@@ -148,7 +148,7 @@ export default function FavoritesScreen() {
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

@@ -14,7 +14,6 @@ import {
   CircularProgress,
   Grid,
 } from '@mui/material';
-import { register } from '../store/slices/authSlice';
 import { RootState } from '../store';
 
 const Register: React.FC = () => {
@@ -80,7 +79,7 @@ const Register: React.FC = () => {
     e.preventDefault();
     if (validateForm()) {
       try {
-        await dispatch(register(formData)).unwrap();
+        // await dispatch(register(formData)).unwrap();
         navigate('/');
       } catch (err) {
         // Hata yönetimi Redux tarafında yapılıyor

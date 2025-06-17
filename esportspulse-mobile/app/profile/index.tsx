@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
@@ -40,127 +40,129 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.header}>
-        <View style={[styles.avatarContainer, { backgroundColor: theme.colors.surface }]}>
-          <Ionicons name="person" size={48} color={theme.colors.primary} />
-        </View>
-        <Text style={[styles.username, { color: theme.colors.text }]}>{user.username}</Text>
-        <Text style={[styles.email, { color: theme.colors.textSecondary }]}>{user.email}</Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Favorilerim</Text>
-        
-        <View style={styles.favoritesContainer}>
-          <TouchableOpacity 
-            style={[styles.favoriteItem, { backgroundColor: theme.colors.surface }]}
-            onPress={() => router.push('/favorites')}
-          >
-            <Ionicons name="heart" size={24} color={theme.colors.primary} />
-            <Text style={[styles.favoriteText, { color: theme.colors.text }]}>Favori Takımlar</Text>
-            <Text style={[styles.favoriteCount, { color: theme.colors.textSecondary }]}>
-              {user.favoriteTeams.length}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={[styles.favoriteItem, { backgroundColor: theme.colors.surface }]}
-            onPress={() => router.push('/favorites')}
-          >
-            <Ionicons name="person" size={24} color={theme.colors.primary} />
-            <Text style={[styles.favoriteText, { color: theme.colors.text }]}>Favori Oyuncular</Text>
-            <Text style={[styles.favoriteCount, { color: theme.colors.textSecondary }]}>
-              {user.favoritePlayers.length}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Bildirim Ayarları</Text>
-        
-        <View style={[styles.preferenceItem, { backgroundColor: theme.colors.surface }]}>
-          <View style={styles.preferenceText}>
-            <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
-              Maç Başlangıç Bildirimleri
-            </Text>
-            <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
-              Maç başlangıç bildirimleri
-            </Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <ScrollView>
+        <View style={styles.header}>
+          <View style={[styles.avatarContainer, { backgroundColor: theme.colors.surface }]}>
+            <Ionicons name="person" size={48} color={theme.colors.primary} />
           </View>
-          <TouchableOpacity onPress={() => toggleNotification('matchStart')}>
-            <Ionicons
-              name={user.notifications.matchStart ? 'notifications' : 'notifications-off'}
-              size={24}
-              color={user.notifications.matchStart ? theme.colors.primary : theme.colors.textSecondary}
-            />
-          </TouchableOpacity>
+          <Text style={[styles.username, { color: theme.colors.text }]}>{user.username}</Text>
+          <Text style={[styles.email, { color: theme.colors.textSecondary }]}>{user.email}</Text>
         </View>
 
-        <View style={[styles.preferenceItem, { backgroundColor: theme.colors.surface }]}>
-          <View style={styles.preferenceText}>
-            <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
-              Skor Değişikliği Bildirimleri
-            </Text>
-            <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
-              Canlı maç skor değişiklikleri
-            </Text>
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Favorilerim</Text>
+          
+          <View style={styles.favoritesContainer}>
+            <TouchableOpacity 
+              style={[styles.favoriteItem, { backgroundColor: theme.colors.surface }]}
+              onPress={() => router.push('/favorites')}
+            >
+              <Ionicons name="heart" size={24} color={theme.colors.primary} />
+              <Text style={[styles.favoriteText, { color: theme.colors.text }]}>Favori Takımlar</Text>
+              <Text style={[styles.favoriteCount, { color: theme.colors.textSecondary }]}>
+                {user.favoriteTeams.length}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.favoriteItem, { backgroundColor: theme.colors.surface }]}
+              onPress={() => router.push('/favorites')}
+            >
+              <Ionicons name="person" size={24} color={theme.colors.primary} />
+              <Text style={[styles.favoriteText, { color: theme.colors.text }]}>Favori Oyuncular</Text>
+              <Text style={[styles.favoriteCount, { color: theme.colors.textSecondary }]}>
+                {user.favoritePlayers.length}
+              </Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={() => toggleNotification('scoreChange')}>
-            <Ionicons
-              name={user.notifications.scoreChange ? 'notifications' : 'notifications-off'}
-              size={24}
-              color={user.notifications.scoreChange ? theme.colors.primary : theme.colors.textSecondary}
-            />
-          </TouchableOpacity>
         </View>
 
-        <View style={[styles.preferenceItem, { backgroundColor: theme.colors.surface }]}>
-          <View style={styles.preferenceText}>
-            <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
-              Maç Sonu Bildirimleri
-            </Text>
-            <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
-              Maç sonuç bildirimleri
-            </Text>
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Bildirim Ayarları</Text>
+          
+          <View style={[styles.preferenceItem, { backgroundColor: theme.colors.surface }]}>
+            <View style={styles.preferenceText}>
+              <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
+                Maç Başlangıç Bildirimleri
+              </Text>
+              <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
+                Maç başlangıç bildirimleri
+              </Text>
+            </View>
+            <TouchableOpacity onPress={() => toggleNotification('matchStart')}>
+              <Ionicons
+                name={user.notifications.matchStart ? 'notifications' : 'notifications-off'}
+                size={24}
+                color={user.notifications.matchStart ? theme.colors.primary : theme.colors.textSecondary}
+              />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={() => toggleNotification('matchEnd')}>
-            <Ionicons
-              name={user.notifications.matchEnd ? 'notifications' : 'notifications-off'}
-              size={24}
-              color={user.notifications.matchEnd ? theme.colors.primary : theme.colors.textSecondary}
-            />
-          </TouchableOpacity>
-        </View>
 
-        <View style={[styles.preferenceItem, { backgroundColor: theme.colors.surface }]}>
-          <View style={styles.preferenceText}>
-            <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
-              Haber Bildirimleri
-            </Text>
-            <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
-              Önemli haberler ve güncellemeler
-            </Text>
+          <View style={[styles.preferenceItem, { backgroundColor: theme.colors.surface }]}>
+            <View style={styles.preferenceText}>
+              <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
+                Skor Değişikliği Bildirimleri
+              </Text>
+              <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
+                Canlı maç skor değişiklikleri
+              </Text>
+            </View>
+            <TouchableOpacity onPress={() => toggleNotification('scoreChange')}>
+              <Ionicons
+                name={user.notifications.scoreChange ? 'notifications' : 'notifications-off'}
+                size={24}
+                color={user.notifications.scoreChange ? theme.colors.primary : theme.colors.textSecondary}
+              />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={() => toggleNotification('news')}>
-            <Ionicons
-              name={user.notifications.news ? 'notifications' : 'notifications-off'}
-              size={24}
-              color={user.notifications.news ? theme.colors.primary : theme.colors.textSecondary}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
 
-      <TouchableOpacity
-        style={[styles.logoutButton, { backgroundColor: theme.colors.error }]}
-        onPress={handleLogout}
-      >
-        <Ionicons name="log-out" size={24} color="white" />
-        <Text style={styles.logoutText}>Çıkış Yap</Text>
-      </TouchableOpacity>
-    </ScrollView>
+          <View style={[styles.preferenceItem, { backgroundColor: theme.colors.surface }]}>
+            <View style={styles.preferenceText}>
+              <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
+                Maç Sonu Bildirimleri
+              </Text>
+              <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
+                Maç sonuç bildirimleri
+              </Text>
+            </View>
+            <TouchableOpacity onPress={() => toggleNotification('matchEnd')}>
+              <Ionicons
+                name={user.notifications.matchEnd ? 'notifications' : 'notifications-off'}
+                size={24}
+                color={user.notifications.matchEnd ? theme.colors.primary : theme.colors.textSecondary}
+              />
+            </TouchableOpacity>
+          </View>
+
+          <View style={[styles.preferenceItem, { backgroundColor: theme.colors.surface }]}>
+            <View style={styles.preferenceText}>
+              <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
+                Haber Bildirimleri
+              </Text>
+              <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
+                Önemli haberler ve güncellemeler
+              </Text>
+            </View>
+            <TouchableOpacity onPress={() => toggleNotification('news')}>
+              <Ionicons
+                name={user.notifications.news ? 'notifications' : 'notifications-off'}
+                size={24}
+                color={user.notifications.news ? theme.colors.primary : theme.colors.textSecondary}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.logoutButton, { backgroundColor: theme.colors.error }]}
+          onPress={handleLogout}
+        >
+          <Ionicons name="log-out" size={24} color="white" />
+          <Text style={styles.logoutText}>Çıkış Yap</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

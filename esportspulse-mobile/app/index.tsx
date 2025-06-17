@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, SafeAreaView } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { apiService } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
@@ -54,78 +54,88 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <Text style={[styles.loadingText, { color: theme.colors.text }]}>Yükleniyor...</Text>
-      </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!matches.length && !news.length) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <Text style={[styles.loadingText, { color: theme.colors.text }]}>Veri alınamadı. Lütfen bağlantınızı ve API sunucunuzu kontrol edin.</Text>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: theme.colors.text }]}>Hoş Geldiniz</Text>
-        <TouchableOpacity style={styles.notificationButton}>
-          <Ionicons name="notifications-outline" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Yaklaşan Maçlar</Text>
-          <Link href="/matches" asChild>
-            <TouchableOpacity>
-              <Text style={[styles.seeAll, { color: theme.colors.primary }]}>Tümünü Gör</Text>
-            </TouchableOpacity>
-          </Link>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <ScrollView>
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: theme.colors.text }]}>Hoş Geldiniz</Text>
+          <TouchableOpacity style={styles.notificationButton}>
+            <Ionicons name="notifications-outline" size={24} color={theme.colors.text} />
+          </TouchableOpacity>
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.matchesContainer}>
-          {matches.map((match) => (
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Yaklaşan Maçlar</Text>
+            <Link href="/matches" asChild>
+              <TouchableOpacity>
+                <Text style={[styles.seeAll, { color: theme.colors.primary }]}>Tümünü Gör</Text>
+              </TouchableOpacity>
+            </Link>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.matchesContainer}>
+            {matches.map((match) => (
+              <TouchableOpacity
+                key={match.id}
+                style={[styles.matchCard, { backgroundColor: theme.colors.surface }]}
+              >
+                <Text style={[styles.matchTeams, { color: theme.colors.text }]}>
+                  {match.homeTeam} vs {match.awayTeam}
+                </Text>
+                <Text style={[styles.matchDate, { color: theme.colors.textSecondary }]}>
+                  {match.date}
+                </Text>
+                <Text style={[styles.matchStatus, { color: theme.colors.primary }]}>
+                  {match.status}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Son Haberler</Text>
+            <Link href="/news" asChild>
+              <TouchableOpacity>
+                <Text style={[styles.seeAll, { color: theme.colors.primary }]}>Tümünü Gör</Text>
+              </TouchableOpacity>
+            </Link>
+          </View>
+          {news.map((item) => (
             <TouchableOpacity
-              key={match.id}
-              style={[styles.matchCard, { backgroundColor: theme.colors.surface }]}
+              key={item.id}
+              style={[styles.newsCard, { backgroundColor: theme.colors.surface }]}
             >
-              <Text style={[styles.matchTeams, { color: theme.colors.text }]}>
-                {match.homeTeam} vs {match.awayTeam}
-              </Text>
-              <Text style={[styles.matchDate, { color: theme.colors.textSecondary }]}>
-                {match.date}
-              </Text>
-              <Text style={[styles.matchStatus, { color: theme.colors.primary }]}>
-                {match.status}
-              </Text>
+              <Image source={{ uri: item.imageUrl }} style={styles.newsImage} />
+              <View style={styles.newsContent}>
+                <Text style={[styles.newsTitle, { color: theme.colors.text }]}>{item.title}</Text>
+                <Text style={[styles.newsSummary, { color: theme.colors.textSecondary }]}>
+                  {item.summary}
+                </Text>
+                <Text style={[styles.newsDate, { color: theme.colors.textSecondary }]}>
+                  {item.date}
+                </Text>
+              </View>
             </TouchableOpacity>
           ))}
-        </ScrollView>
-      </View>
-
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Son Haberler</Text>
-          <Link href="/news" asChild>
-            <TouchableOpacity>
-              <Text style={[styles.seeAll, { color: theme.colors.primary }]}>Tümünü Gör</Text>
-            </TouchableOpacity>
-          </Link>
         </View>
-        {news.map((item) => (
-          <TouchableOpacity
-            key={item.id}
-            style={[styles.newsCard, { backgroundColor: theme.colors.surface }]}
-          >
-            <Image source={{ uri: item.imageUrl }} style={styles.newsImage} />
-            <View style={styles.newsContent}>
-              <Text style={[styles.newsTitle, { color: theme.colors.text }]}>{item.title}</Text>
-              <Text style={[styles.newsSummary, { color: theme.colors.textSecondary }]}>
-                {item.summary}
-              </Text>
-              <Text style={[styles.newsDate, { color: theme.colors.textSecondary }]}>
-                {item.date}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

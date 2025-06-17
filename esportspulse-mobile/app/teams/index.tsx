@@ -27,9 +27,9 @@ export default function TeamsScreen() {
 
   const fetchTeams = async () => {
     try {
-      const response = await apiService.get<Team[]>('/teams');
+      const response = await apiService.get<any>('/team/list');
       if (!response.error) {
-        setTeams(response.data);
+        setTeams(response.data.data || response.data);
       }
     } catch (error) {
       console.error('Takım verileri yüklenirken hata:', error);
@@ -43,32 +43,30 @@ export default function TeamsScreen() {
   );
 
   const renderTeamItem = ({ item }: { item: Team }) => (
-    <Link href={`/team/${item.id}`} asChild>
-      <TouchableOpacity style={[styles.teamCard, { backgroundColor: theme.colors.surface }]}>
-        <Image source={{ uri: item.logo }} style={styles.teamLogo} />
-        <View style={styles.teamInfo}>
-          <Text style={[styles.teamName, { color: theme.colors.text }]}>{item.name}</Text>
-          <Text style={[styles.teamRegion, { color: theme.colors.textSecondary }]}>
-            {item.region}
-          </Text>
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Sıralama</Text>
-              <Text style={[styles.statValue, { color: theme.colors.text }]}>#{item.ranking}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>G</Text>
-              <Text style={[styles.statValue, { color: theme.colors.text }]}>{item.wins}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>M</Text>
-              <Text style={[styles.statValue, { color: theme.colors.text }]}>{item.losses}</Text>
-            </View>
+    <View style={[styles.teamCard, { backgroundColor: theme.colors.surface }]}>
+      <Image source={{ uri: item.logo }} style={styles.teamLogo} />
+      <View style={styles.teamInfo}>
+        <Text style={[styles.teamName, { color: theme.colors.text }]}>{item.name}</Text>
+        <Text style={[styles.teamRegion, { color: theme.colors.textSecondary }]}>
+          {item.region}
+        </Text>
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Sıralama</Text>
+            <Text style={[styles.statValue, { color: theme.colors.text }]}>#{item.ranking}</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>G</Text>
+            <Text style={[styles.statValue, { color: theme.colors.text }]}>{item.wins}</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>M</Text>
+            <Text style={[styles.statValue, { color: theme.colors.text }]}>{item.losses}</Text>
           </View>
         </View>
-        <Ionicons name="chevron-forward" size={24} color={theme.colors.textSecondary} />
-      </TouchableOpacity>
-    </Link>
+      </View>
+      <Ionicons name="chevron-forward" size={24} color={theme.colors.textSecondary} />
+    </View>
   );
 
   if (loading) {

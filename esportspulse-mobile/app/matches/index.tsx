@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, SafeAreaView } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { apiService } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,9 +29,20 @@ export default function MatchesScreen() {
 
   const fetchMatches = async () => {
     try {
-      const response = await apiService.get<Match[]>(`/matches?filter=${selectedFilter}`);
+      const response = await apiService.get<any>('/match/list');
       if (!response.error) {
-        setMatches(response.data);
+        const mappedMatches = (response.data.data || []).map((item: any) => ({
+          id: String(item.id),
+          homeTeam: item.team1,
+          awayTeam: item.team2,
+          date: item.time,
+          status: item.status,
+          tournament: item.event,
+          homeTeamLogo: item.team1_logo,
+          awayTeamLogo: item.team2_logo,
+          score: item.score || '',
+        }));
+        setMatches(mappedMatches);
       }
     } catch (error) {
       console.error('Maç verileri yüklenirken hata:', error);
@@ -91,21 +102,28 @@ export default function MatchesScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
         <Text style={[styles.loadingText, { color: theme.colors.text }]}>Yükleniyor...</Text>
-      </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!matches.length) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
+        <Text style={[styles.loadingText, { color: theme.colors.text }]}>Maç verisi alınamadı. Lütfen bağlantınızı ve API sunucunuzu kontrol edin.</Text>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
       <View style={styles.filterContainer}>
         {renderFilterButton('all', 'Tümü')}
         {renderFilterButton('live', 'Canlı')}
         {renderFilterButton('upcoming', 'Yaklaşan')}
         {renderFilterButton('completed', 'Tamamlanan')}
       </View>
-
       <FlatList
         data={matches}
         renderItem={renderMatchItem}
@@ -113,7 +131,7 @@ export default function MatchesScreen() {
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

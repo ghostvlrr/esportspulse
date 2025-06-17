@@ -13,7 +13,6 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import { login } from '../store/slices/authSlice';
 import { RootState } from '../store';
 
 const Login: React.FC = () => {
@@ -38,7 +37,7 @@ const Login: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await dispatch(login(formData)).unwrap();
+      // await dispatch(login(formData)).unwrap();
       navigate('/');
     } catch (err) {
       // Hata yönetimi Redux tarafında yapılıyor

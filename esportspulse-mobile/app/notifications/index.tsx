@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { notificationService, Notification } from '@/services/notifications';
 import { Ionicons } from '@expo/vector-icons';
@@ -90,15 +90,15 @@ export default function NotificationsScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <Text style={[styles.loadingText, { color: theme.colors.text }]}>Yükleniyor...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (notifications.length === 0) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={styles.emptyContainer}>
           <Ionicons name="notifications-off" size={64} color={theme.colors.textSecondary} />
           <Text style={[styles.emptyText, { color: theme.colors.text }]}>
@@ -108,12 +108,12 @@ export default function NotificationsScreen() {
             Yeni bildirimler burada görünecek
           </Text>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Bildirimler</Text>
         <View style={styles.headerActions}>
@@ -145,7 +145,7 @@ export default function NotificationsScreen() {
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

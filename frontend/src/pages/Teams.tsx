@@ -5,6 +5,9 @@ import { Favorite, FavoriteBorder, NotificationsActive, NotificationsOff } from 
 import { CircularProgress, IconButton, Tooltip, Badge, Dialog, DialogTitle, DialogContent, DialogActions, Button, Switch, FormControlLabel, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
 
@@ -37,10 +40,6 @@ const Teams: React.FC = () => {
   const [favoriteTeams, setFavoriteTeams] = useState<string[]>(() => {
     const stored = localStorage.getItem('favoriteTeams');
     return stored ? JSON.parse(stored) : [];
-  });
-  const [notificationSettings, setNotificationSettings] = useState<{[key: string]: NotificationSettings}>(() => {
-    const stored = localStorage.getItem('teamNotificationSettings');
-    return stored ? JSON.parse(stored) : {};
   });
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);

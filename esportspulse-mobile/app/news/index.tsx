@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, SafeAreaView } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { apiService } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,10 +28,29 @@ export default function NewsScreen() {
 
   const fetchNews = async () => {
     try {
-      const response = await apiService.get<News[]>(`/news?category=${selectedCategory}`);
-      if (!response.error) {
-        setNews(response.data);
-      }
+      // VLRGG API'de news endpoint yok, dummy veri kullanılıyor
+      setNews([
+        {
+          id: '1',
+          title: 'Valorant Dünya Şampiyonası Başladı',
+          summary: 'Dünyanın en iyi takımları şampiyonluk için mücadele ediyor.',
+          content: '',
+          imageUrl: 'https://images.unsplash.com/photo-1511512578047-dfb367046420',
+          author: 'Admin',
+          date: '2024-06-17',
+          category: 'tournaments',
+        },
+        {
+          id: '2',
+          title: 'Yeni Transferler Açıklandı',
+          summary: 'Birçok yıldız oyuncu yeni takımlarına transfer oldu.',
+          content: '',
+          imageUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
+          author: 'Editör',
+          date: '2024-06-16',
+          category: 'transfers',
+        },
+      ]);
     } catch (error) {
       console.error('Haber verileri yüklenirken hata:', error);
     } finally {
@@ -84,14 +103,22 @@ export default function NewsScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
         <Text style={[styles.loadingText, { color: theme.colors.text }]}>Yükleniyor...</Text>
-      </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!news.length) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
+        <Text style={[styles.loadingText, { color: theme.colors.text }]}>Haber verisi alınamadı. Lütfen bağlantınızı ve API sunucunuzu kontrol edin.</Text>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
       <View style={styles.categoriesContainer}>
         {renderCategoryButton('all', 'Tümü')}
         {renderCategoryButton('tournaments', 'Turnuvalar')}
@@ -99,7 +126,6 @@ export default function NewsScreen() {
         {renderCategoryButton('players', 'Oyuncular')}
         {renderCategoryButton('transfers', 'Transferler')}
       </View>
-
       <FlatList
         data={news}
         renderItem={renderNewsItem}
@@ -107,7 +133,7 @@ export default function NewsScreen() {
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

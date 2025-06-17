@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'http://localhost:3000/api';
+const BASE_URL = 'https://vlrggapi.vercel.app';
 
 interface ApiResponse<T> {
   data: T;
@@ -27,7 +27,7 @@ class ApiService {
 
   async get<T>(endpoint: string): Promise<ApiResponse<T>> {
     try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const response = await fetch(`${BASE_URL}${endpoint}`, {
         headers: await this.getHeaders(),
       });
       return this.handleResponse<T>(response);
@@ -38,7 +38,7 @@ class ApiService {
 
   async post<T>(endpoint: string, body: any): Promise<ApiResponse<T>> {
     try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const response = await fetch(`${BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: await this.getHeaders(),
         body: JSON.stringify(body),
@@ -51,7 +51,7 @@ class ApiService {
 
   async put<T>(endpoint: string, body: any): Promise<ApiResponse<T>> {
     try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const response = await fetch(`${BASE_URL}${endpoint}`, {
         method: 'PUT',
         headers: await this.getHeaders(),
         body: JSON.stringify(body),
@@ -64,7 +64,7 @@ class ApiService {
 
   async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
     try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const response = await fetch(`${BASE_URL}${endpoint}`, {
         method: 'DELETE',
         headers: await this.getHeaders(),
       });

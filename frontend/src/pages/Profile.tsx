@@ -29,7 +29,6 @@ import {
   Favorite as FavoriteIcon,
 } from '@mui/icons-material';
 import { RootState } from '../store';
-import { updateUser } from '../store/slices/authSlice';
 import { userService } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -137,7 +136,6 @@ const Profile: React.FC = () => {
       };
 
       const response = await userService.updateProfile(updatedUser);
-      dispatch(updateUser(response));
       setIsEditing(false);
     } catch (error) {
       console.error('Profil güncellenirken hata oluştu:', error);
