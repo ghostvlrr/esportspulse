@@ -1,152 +1,117 @@
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
-import { useColorScheme } from 'react-native';
-import { darkTheme, lightTheme } from '@/constants/theme';
-import { useEffect, useState, useCallback } from 'react';
-import { getLiveMatches, getUpcomingMatches, getCompletedMatches } from '@/services/vlrApi';
+import React from 'react';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { useTheme } from '@/hooks/useTheme';
+import { apiService } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
+import { Link } from 'expo-router';
 
 interface Match {
   id: string;
-  team1: string;
-  team2: string;
-  score1?: number;
-  score2?: number;
+  homeTeam: string;
+  awayTeam: string;
+  score: string;
   status: string;
-  time: string;
+  date: string;
+  tournament: string;
+  homeTeamLogo: string;
+  awayTeamLogo: string;
 }
 
 export default function MatchesScreen() {
-  const colorScheme = useColorScheme();
-  const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
-  const [activeTab, setActiveTab] = useState<'live' | 'upcoming' | 'completed'>('live');
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { theme } = useTheme();
+  const [matches, setMatches] = React.useState<Match[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [selectedFilter, setSelectedFilter] = React.useState('all');
+
+  React.useEffect(() => {
+    fetchMatches();
+  }, [selectedFilter]);
 
   const fetchMatches = async () => {
     try {
-      setError(null);
-      let data: Match[] = [];
-      
-      switch (activeTab) {
-        case 'live':
-          data = await getLiveMatches();
-          break;
-        case 'upcoming':
-          data = await getUpcomingMatches();
-          break;
-        case 'completed':
-          data = await getCompletedMatches();
-          break;
+      const response = await apiService.get<Match[]>(`/matches?filter=${selectedFilter}`);
+      if (!response.error) {
+        setMatches(response.data);
       }
-      
-      setMatches(data);
     } catch (error) {
-      setError('Maçlar yüklenirken bir hata oluştu.');
+      console.error('Maç verileri yüklenirken hata:', error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchMatches();
-  }, [activeTab]);
-
-  useEffect(() => {
-    fetchMatches();
-  }, [activeTab]);
-
-  const renderMatch = ({ item }: { item: Match }) => (
-    <View style={[styles.matchCard, { backgroundColor: theme.colors.card }]}>
-      <View style={styles.matchHeader}>
-        <View style={styles.statusContainer}>
-          <Ionicons
-            name={activeTab === 'live' ? 'radio' : activeTab === 'upcoming' ? 'time' : 'checkmark-circle'}
-            size={16}
-            color={activeTab === 'live' ? theme.colors.error : activeTab === 'upcoming' ? theme.colors.warning : theme.colors.success}
-          />
-          <Text style={[styles.matchStatus, { color: theme.colors.text }]}>{item.status}</Text>
+  const renderMatchItem = ({ item }: { item: Match }) => (
+    <Link href={`/match/${item.id}`} asChild>
+      <TouchableOpacity style={[styles.matchCard, { backgroundColor: theme.colors.surface }]}>
+        <View style={styles.matchHeader}>
+          <Text style={[styles.tournamentName, { color: theme.colors.textSecondary }]}>
+            {item.tournament}
+          </Text>
+          <Text style={[styles.matchDate, { color: theme.colors.textSecondary }]}>{item.date}</Text>
         </View>
-        <Text style={[styles.matchTime, { color: theme.colors.text }]}>{item.time}</Text>
-      </View>
-      <View style={styles.matchTeams}>
-        <Text style={[styles.teamName, { color: theme.colors.text }]}>{item.team1}</Text>
-        {item.score1 !== undefined && (
-          <Text style={[styles.score, { color: theme.colors.primary }]}>{item.score1}</Text>
-        )}
-        <Text style={[styles.vs, { color: theme.colors.text }]}>vs</Text>
-        {item.score2 !== undefined && (
-          <Text style={[styles.score, { color: theme.colors.primary }]}>{item.score2}</Text>
-        )}
-        <Text style={[styles.teamName, { color: theme.colors.text }]}>{item.team2}</Text>
-      </View>
-    </View>
+
+        <View style={styles.teamsContainer}>
+          <View style={styles.teamInfo}>
+            <Image source={{ uri: item.homeTeamLogo }} style={styles.teamLogo} />
+            <Text style={[styles.teamName, { color: theme.colors.text }]}>{item.homeTeam}</Text>
+          </View>
+
+          <View style={styles.scoreContainer}>
+            <Text style={[styles.score, { color: theme.colors.text }]}>{item.score}</Text>
+            <Text style={[styles.status, { color: theme.colors.primary }]}>{item.status}</Text>
+          </View>
+
+          <View style={styles.teamInfo}>
+            <Image source={{ uri: item.awayTeamLogo }} style={styles.teamLogo} />
+            <Text style={[styles.teamName, { color: theme.colors.text }]}>{item.awayTeam}</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    </Link>
   );
 
-  const renderTabButton = (tab: 'live' | 'upcoming' | 'completed', label: string, icon: string) => (
+  const renderFilterButton = (filter: string, label: string) => (
     <TouchableOpacity
       style={[
-        styles.tabButton,
-        activeTab === tab && { backgroundColor: theme.colors.primary },
+        styles.filterButton,
+        selectedFilter === filter && { backgroundColor: theme.colors.primary },
       ]}
-      onPress={() => setActiveTab(tab)}>
-      <Ionicons
-        name={icon}
-        size={16}
-        color={activeTab === tab ? '#fff' : theme.colors.text}
-        style={styles.tabIcon}
-      />
+      onPress={() => setSelectedFilter(filter)}
+    >
       <Text
         style={[
-          styles.tabButtonText,
-          { color: activeTab === tab ? '#fff' : theme.colors.text },
-        ]}>
+          styles.filterButtonText,
+          { color: selectedFilter === filter ? '#FFFFFF' : theme.colors.text },
+        ]}
+      >
         {label}
       </Text>
     </TouchableOpacity>
   );
 
-  if (loading && !refreshing) {
+  if (loading) {
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <Text style={[styles.loadingText, { color: theme.colors.text }]}>Maçlar yükleniyor...</Text>
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <Text style={[styles.errorText, { color: theme.colors.error }]}>{error}</Text>
+        <Text style={[styles.loadingText, { color: theme.colors.text }]}>Yükleniyor...</Text>
       </View>
     );
   }
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.tabContainer}>
-        {renderTabButton('live', 'Canlı', 'radio')}
-        {renderTabButton('upcoming', 'Yaklaşan', 'time')}
-        {renderTabButton('completed', 'Tamamlanan', 'checkmark-circle')}
+      <View style={styles.filterContainer}>
+        {renderFilterButton('all', 'Tümü')}
+        {renderFilterButton('live', 'Canlı')}
+        {renderFilterButton('upcoming', 'Yaklaşan')}
+        {renderFilterButton('completed', 'Tamamlanan')}
       </View>
+
       <FlatList
         data={matches}
-        renderItem={renderMatch}
+        renderItem={renderMatchItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        ListEmptyComponent={
-          <Text style={[styles.emptyText, { color: theme.colors.text }]}>
-            {activeTab === 'live'
-              ? 'Şu anda canlı maç bulunmuyor.'
-              : activeTab === 'upcoming'
-              ? 'Yaklaşan maç bulunmuyor.'
-              : 'Tamamlanan maç bulunmuyor.'}
-          </Text>
-        }
+        showsVerticalScrollIndicator={false}
       />
     </View>
   );
@@ -156,27 +121,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  tabContainer: {
+  filterContainer: {
     flexDirection: 'row',
     padding: 16,
     gap: 8,
   },
-  tabButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
+  filterButton: {
     paddingHorizontal: 16,
-    borderRadius: 8,
-    gap: 4,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 0, 0, 0.1)',
   },
-  tabIcon: {
-    marginRight: 4,
-  },
-  tabButtonText: {
+  filterButtonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   listContainer: {
     padding: 16,
@@ -185,61 +143,52 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
   matchHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 12,
-    alignItems: 'center',
   },
-  statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  matchStatus: {
+  tournamentName: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
   },
-  matchTime: {
+  matchDate: {
     fontSize: 14,
   },
-  matchTeams: {
+  teamsContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  teamInfo: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  teamLogo: {
+    width: 40,
+    height: 40,
+    marginBottom: 8,
   },
   teamName: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  vs: {
-    marginHorizontal: 8,
     fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  scoreContainer: {
+    alignItems: 'center',
+    marginHorizontal: 16,
   },
   score: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginHorizontal: 8,
+    marginBottom: 4,
+  },
+  status: {
+    fontSize: 12,
+    fontWeight: '500',
   },
   loadingText: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginTop: 20,
-  },
-  errorText: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginTop: 20,
-    marginHorizontal: 20,
-  },
-  emptyText: {
     fontSize: 16,
     textAlign: 'center',
     marginTop: 20,

@@ -1,38 +1,78 @@
-import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = 'http://localhost:3000/api';
+const API_URL = 'http://localhost:3000/api';
 
-export const api = axios.create({
-  baseURL: BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+interface ApiResponse<T> {
+  data: T;
+  error?: string;
+}
 
-// Request interceptor
-api.interceptors.request.use(
-  async (config) => {
+class ApiService {
+  private async getHeaders(): Promise<HeadersInit> {
     const token = await AsyncStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
   }
-);
 
-// Response interceptor
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    if (error.response?.status === 401) {
-      // Token geçersiz veya süresi dolmuş
-      await AsyncStorage.removeItem('token');
-      // Kullanıcıyı login sayfasına yönlendir
+  private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
+    if (!response.ok) {
+      const error = await response.json();
+      return { data: null as T, error: error.message || 'Bir hata oluştu' };
     }
-    return Promise.reject(error);
+    const data = await response.json();
+    return { data };
   }
-); 
+
+  async get<T>(endpoint: string): Promise<ApiResponse<T>> {
+    try {
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        headers: await this.getHeaders(),
+      });
+      return this.handleResponse<T>(response);
+    } catch (error) {
+      return { data: null as T, error: 'Bağlantı hatası' };
+    }
+  }
+
+  async post<T>(endpoint: string, body: any): Promise<ApiResponse<T>> {
+    try {
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        method: 'POST',
+        headers: await this.getHeaders(),
+        body: JSON.stringify(body),
+      });
+      return this.handleResponse<T>(response);
+    } catch (error) {
+      return { data: null as T, error: 'Bağlantı hatası' };
+    }
+  }
+
+  async put<T>(endpoint: string, body: any): Promise<ApiResponse<T>> {
+    try {
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        method: 'PUT',
+        headers: await this.getHeaders(),
+        body: JSON.stringify(body),
+      });
+      return this.handleResponse<T>(response);
+    } catch (error) {
+      return { data: null as T, error: 'Bağlantı hatası' };
+    }
+  }
+
+  async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
+    try {
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        method: 'DELETE',
+        headers: await this.getHeaders(),
+      });
+      return this.handleResponse<T>(response);
+    } catch (error) {
+      return { data: null as T, error: 'Bağlantı hatası' };
+    }
+  }
+}
+
+export const apiService = new ApiService(); 

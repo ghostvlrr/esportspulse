@@ -1,55 +1,88 @@
-import { View, Text, StyleSheet, FlatList, RefreshControl } from 'react-native';
-import { useColorScheme } from 'react-native';
-import { darkTheme, lightTheme } from '@/constants/theme';
-import { useEffect, useState, useCallback } from 'react';
-import { getNews } from '@/services/vlrApi';
+import React from 'react';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { useTheme } from '@/hooks/useTheme';
+import { apiService } from '@/services/api';
+import { Ionicons } from '@expo/vector-icons';
+import { Link } from 'expo-router';
 
 interface News {
   id: string;
   title: string;
-  description: string;
+  summary: string;
+  content: string;
+  imageUrl: string;
+  author: string;
   date: string;
+  category: string;
 }
 
 export default function NewsScreen() {
-  const colorScheme = useColorScheme();
-  const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
-  const [news, setNews] = useState<News[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { theme } = useTheme();
+  const [news, setNews] = React.useState<News[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [selectedCategory, setSelectedCategory] = React.useState('all');
+
+  React.useEffect(() => {
+    fetchNews();
+  }, [selectedCategory]);
 
   const fetchNews = async () => {
     try {
-      setError(null);
-      const data = await getNews();
-      setNews(data);
+      const response = await apiService.get<News[]>(`/news?category=${selectedCategory}`);
+      if (!response.error) {
+        setNews(response.data);
+      }
     } catch (error) {
-      setError('Haberler yüklenirken bir hata oluştu.');
+      console.error('Haber verileri yüklenirken hata:', error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchNews();
-  }, []);
-
-  useEffect(() => {
-    fetchNews();
-  }, []);
-
-  const renderNews = ({ item, index }: { item: News; index: number }) => (
-    <View key={`${item.id}-${index}`} style={[styles.newsCard, { backgroundColor: theme.colors.card }]}>
-      <Text style={[styles.newsTitle, { color: theme.colors.text }]}>{item.title}</Text>
-      <Text style={[styles.newsDescription, { color: theme.colors.text }]}>{item.description}</Text>
-      <Text style={[styles.newsDate, { color: theme.colors.text }]}>{item.date}</Text>
-    </View>
+  const renderNewsItem = ({ item }: { item: News }) => (
+    <Link href={`/news/${item.id}`} asChild>
+      <TouchableOpacity style={[styles.newsCard, { backgroundColor: theme.colors.surface }]}>
+        <Image source={{ uri: item.imageUrl }} style={styles.newsImage} />
+        <View style={styles.newsContent}>
+          <View style={styles.newsHeader}>
+            <Text style={[styles.category, { color: theme.colors.primary }]}>{item.category}</Text>
+            <Text style={[styles.date, { color: theme.colors.textSecondary }]}>{item.date}</Text>
+          </View>
+          <Text style={[styles.title, { color: theme.colors.text }]}>{item.title}</Text>
+          <Text style={[styles.summary, { color: theme.colors.textSecondary }]} numberOfLines={2}>
+            {item.summary}
+          </Text>
+          <View style={styles.footer}>
+            <Text style={[styles.author, { color: theme.colors.textSecondary }]}>
+              {item.author}
+            </Text>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+          </View>
+        </View>
+      </TouchableOpacity>
+    </Link>
   );
 
-  if (loading && !refreshing) {
+  const renderCategoryButton = (category: string, label: string) => (
+    <TouchableOpacity
+      style={[
+        styles.categoryButton,
+        selectedCategory === category && { backgroundColor: theme.colors.primary },
+      ]}
+      onPress={() => setSelectedCategory(category)}
+    >
+      <Text
+        style={[
+          styles.categoryButtonText,
+          { color: selectedCategory === category ? '#FFFFFF' : theme.colors.text },
+        ]}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  if (loading) {
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <Text style={[styles.loadingText, { color: theme.colors.text }]}>Yükleniyor...</Text>
@@ -57,27 +90,24 @@ export default function NewsScreen() {
     );
   }
 
-  if (error) {
-    return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <Text style={[styles.errorText, { color: theme.colors.error }]}>{error}</Text>
-      </View>
-    );
-  }
-
   return (
-    <FlatList
-      data={news}
-      renderItem={renderNews}
-      keyExtractor={(item, index) => `${item.id}-${index}`}
-      contentContainerStyle={styles.listContainer}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      ListEmptyComponent={
-        <Text style={[styles.emptyText, { color: theme.colors.text }]}>
-          Haber bulunamadı.
-        </Text>
-      }
-    />
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={styles.categoriesContainer}>
+        {renderCategoryButton('all', 'Tümü')}
+        {renderCategoryButton('tournaments', 'Turnuvalar')}
+        {renderCategoryButton('teams', 'Takımlar')}
+        {renderCategoryButton('players', 'Oyuncular')}
+        {renderCategoryButton('transfers', 'Transferler')}
+      </View>
+
+      <FlatList
+        data={news}
+        renderItem={renderNewsItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
+      />
+    </View>
   );
 }
 
@@ -85,44 +115,68 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  categoriesContainer: {
+    flexDirection: 'row',
+    padding: 16,
+    gap: 8,
+  },
+  categoryButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 0, 0, 0.1)',
+  },
+  categoryButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
   listContainer: {
     padding: 16,
   },
   newsCard: {
     borderRadius: 12,
-    padding: 16,
     marginBottom: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    overflow: 'hidden',
   },
-  newsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  newsImage: {
+    width: '100%',
+    height: 200,
+  },
+  newsContent: {
+    padding: 16,
+  },
+  newsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
   },
-  newsDescription: {
+  category: {
     fontSize: 14,
+    fontWeight: '500',
+  },
+  date: {
+    fontSize: 14,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
     marginBottom: 8,
   },
-  newsDate: {
-    fontSize: 12,
-    opacity: 0.7,
+  summary: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  author: {
+    fontSize: 14,
   },
   loadingText: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginTop: 20,
-  },
-  errorText: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginTop: 20,
-    marginHorizontal: 20,
-  },
-  emptyText: {
     fontSize: 16,
     textAlign: 'center',
     marginTop: 20,

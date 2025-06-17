@@ -3,6 +3,7 @@ import { DarkTheme, DefaultTheme } from '@react-navigation/native';
 export const darkTheme = {
   colors: {
     primary: '#FF0000',
+    secondary: '#FF4D4D',
     background: '#0A0A0A',
     surface: '#171717',
     text: '#FFFFFF',
@@ -11,6 +12,10 @@ export const darkTheme = {
     tabBar: '#171717',
     tabBarActive: '#FF0000',
     tabBarInactive: 'rgba(255, 255, 255, 0.5)',
+    error: '#FF4D4D',
+    success: '#4CAF50',
+    warning: '#FFC107',
+    info: '#2196F3',
   },
   spacing: {
     xs: 4,
@@ -75,6 +80,7 @@ export const darkTheme = {
 export const lightTheme = {
   colors: {
     primary: '#FF0000',
+    secondary: '#FF4D4D',
     background: '#FFFFFF',
     surface: '#F5F5F5',
     text: '#000000',
@@ -83,6 +89,10 @@ export const lightTheme = {
     tabBar: '#FFFFFF',
     tabBarActive: '#FF0000',
     tabBarInactive: 'rgba(0, 0, 0, 0.5)',
+    error: '#FF4D4D',
+    success: '#4CAF50',
+    warning: '#FFC107',
+    info: '#2196F3',
   },
   spacing: {
     xs: 4,

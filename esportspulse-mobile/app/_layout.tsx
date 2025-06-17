@@ -10,11 +10,12 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: theme.colors.tabBarActive,
+        tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.tabBarInactive,
         tabBarStyle: {
-          backgroundColor: theme.colors.tabBar,
-          borderTopWidth: 0,
+          backgroundColor: theme.colors.background,
+          borderTopWidth: 1,
+          borderTopColor: theme.colors.border,
           elevation: 0,
           height: 60,
           paddingBottom: 8,
@@ -24,6 +25,8 @@ export default function TabLayout() {
           backgroundColor: theme.colors.background,
           elevation: 0,
           shadowOpacity: 0,
+          borderBottomWidth: 1,
+          borderBottomColor: theme.colors.border,
         },
         headerTintColor: theme.colors.text,
         headerTitleStyle: {
@@ -62,6 +65,20 @@ export default function TabLayout() {
         options={{
           title: 'Haberler',
           tabBarIcon: ({ color, size }) => <Ionicons name="newspaper" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="events/index"
+        options={{
+          title: 'Etkinlikler',
+          tabBarIcon: ({ color, size }) => <Ionicons name="calendar" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="favorites/index"
+        options={{
+          title: 'Favoriler',
+          tabBarIcon: ({ color, size }) => <Ionicons name="heart" size={size} color={color} />,
         }}
       />
       <Tabs.Screen

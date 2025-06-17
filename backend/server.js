@@ -29,7 +29,7 @@ app.use(limiter);
 const allowedOrigins = [
   'http://localhost:3000',
   'https://esportspulse.netlify.app',
-  'https://testttttttttttttttttttt.netlify.app'
+  'https://esportspulsedemo.netlify.app'
 ];
 
 const normalizeOrigin = (origin) => {

@@ -1,128 +1,151 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Switch, ScrollView, RefreshControl } from 'react-native';
+import React from 'react';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
-import { api } from '@/services/api';
-
-interface NotificationPreferences {
-  matchStart: boolean;
-  scoreChange: boolean;
-  matchEnd: boolean;
-  news: boolean;
-}
+import { notificationService, Notification } from '@/services/notifications';
+import { Ionicons } from '@expo/vector-icons';
+import { Link } from 'expo-router';
 
 export default function NotificationsScreen() {
-  const theme = useTheme();
-  const [preferences, setPreferences] = useState<NotificationPreferences>({
-    matchStart: true,
-    scoreChange: true,
-    matchEnd: true,
-    news: true,
-  });
-  const [refreshing, setRefreshing] = useState(false);
+  const { theme } = useTheme();
+  const [notifications, setNotifications] = React.useState<Notification[]>([]);
+  const [loading, setLoading] = React.useState(true);
 
-  const onRefresh = React.useCallback(async () => {
-    setRefreshing(true);
-    try {
-      const response = await api.get('/notifications/preferences');
-      setPreferences(response.data);
-    } catch (error) {
-      console.error('Bildirim tercihleri yüklenirken hata:', error);
-    } finally {
-      setRefreshing(false);
-    }
+  React.useEffect(() => {
+    const unsubscribe = notificationService.addListener((updatedNotifications) => {
+      setNotifications(updatedNotifications);
+    });
+
+    notificationService.initialize().finally(() => {
+      setLoading(false);
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
-  useEffect(() => {
-    onRefresh();
-  }, []);
-
-  const handlePreferenceChange = async (key: keyof NotificationPreferences, value: boolean) => {
-    try {
-      const newPreferences = { ...preferences, [key]: value };
-      await api.put('/notifications/preferences', newPreferences);
-      setPreferences(newPreferences);
-    } catch (error) {
-      console.error('Bildirim tercihi güncellenirken hata:', error);
-    }
+  const handleMarkAsRead = async (notificationId: string) => {
+    await notificationService.markAsRead(notificationId);
   };
 
-  return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Bildirim Ayarları</Text>
-        
-        <View style={styles.preferenceItem}>
-          <View style={styles.preferenceText}>
-            <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
-              Maç Başlangıç Bildirimleri
-            </Text>
-            <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
-              Maç başlangıç bildirimleri
-            </Text>
-          </View>
-          <Switch
-            value={preferences.matchStart}
-            onValueChange={(value) => handlePreferenceChange('matchStart', value)}
-            trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
-            thumbColor={theme.colors.background}
-          />
-        </View>
+  const handleDeleteNotification = async (notificationId: string) => {
+    await notificationService.deleteNotification(notificationId);
+  };
 
-        <View style={styles.preferenceItem}>
-          <View style={styles.preferenceText}>
-            <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
-              Skor Değişikliği Bildirimleri
-            </Text>
-            <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
-              Canlı maç skor değişiklikleri
-            </Text>
-          </View>
-          <Switch
-            value={preferences.scoreChange}
-            onValueChange={(value) => handlePreferenceChange('scoreChange', value)}
-            trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
-            thumbColor={theme.colors.background}
-          />
-        </View>
+  const handleMarkAllAsRead = async () => {
+    await notificationService.markAllAsRead();
+  };
 
-        <View style={styles.preferenceItem}>
-          <View style={styles.preferenceText}>
-            <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
-              Maç Sonu Bildirimleri
-            </Text>
-            <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
-              Maç sonuç bildirimleri
-            </Text>
-          </View>
-          <Switch
-            value={preferences.matchEnd}
-            onValueChange={(value) => handlePreferenceChange('matchEnd', value)}
-            trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
-            thumbColor={theme.colors.background}
-          />
-        </View>
+  const handleClearAll = async () => {
+    await notificationService.clearAllNotifications();
+  };
 
-        <View style={styles.preferenceItem}>
-          <View style={styles.preferenceText}>
-            <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
-              Haber Bildirimleri
-            </Text>
-            <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
-              Önemli haberler ve güncellemeler
-            </Text>
-          </View>
-          <Switch
-            value={preferences.news}
-            onValueChange={(value) => handlePreferenceChange('news', value)}
-            trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
-            thumbColor={theme.colors.background}
+  const renderNotificationItem = ({ item }: { item: Notification }) => (
+    <View style={[styles.notificationCard, { backgroundColor: theme.colors.surface }]}>
+      <View style={styles.notificationHeader}>
+        <View style={styles.notificationType}>
+          <Ionicons
+            name={
+              item.type === 'match'
+                ? 'trophy'
+                : item.type === 'news'
+                ? 'newspaper'
+                : item.type === 'event'
+                ? 'calendar'
+                : 'notifications'
+            }
+            size={20}
+            color={theme.colors.primary}
           />
+          <Text style={[styles.notificationTypeText, { color: theme.colors.primary }]}>
+            {item.type === 'match'
+              ? 'Maç'
+              : item.type === 'news'
+              ? 'Haber'
+              : item.type === 'event'
+              ? 'Etkinlik'
+              : 'Sistem'}
+          </Text>
+        </View>
+        <TouchableOpacity onPress={() => handleDeleteNotification(item.id)}>
+          <Ionicons name="close" size={20} color={theme.colors.textSecondary} />
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity
+        style={styles.notificationContent}
+        onPress={() => handleMarkAsRead(item.id)}
+        disabled={item.read}
+      >
+        <Text style={[styles.notificationTitle, { color: theme.colors.text }]}>{item.title}</Text>
+        <Text style={[styles.notificationMessage, { color: theme.colors.textSecondary }]}>
+          {item.message}
+        </Text>
+        <Text style={[styles.notificationDate, { color: theme.colors.textSecondary }]}>
+          {item.createdAt}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <Text style={[styles.loadingText, { color: theme.colors.text }]}>Yükleniyor...</Text>
+      </View>
+    );
+  }
+
+  if (notifications.length === 0) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={styles.emptyContainer}>
+          <Ionicons name="notifications-off" size={64} color={theme.colors.textSecondary} />
+          <Text style={[styles.emptyText, { color: theme.colors.text }]}>
+            Bildirim bulunmuyor
+          </Text>
+          <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>
+            Yeni bildirimler burada görünecek
+          </Text>
         </View>
       </View>
-    </ScrollView>
+    );
+  }
+
+  return (
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={styles.header}>
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Bildirimler</Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={handleMarkAllAsRead}
+            disabled={notifications.every((n) => n.read)}
+          >
+            <Ionicons
+              name="checkmark-done"
+              size={24}
+              color={
+                notifications.every((n) => n.read)
+                  ? theme.colors.textSecondary
+                  : theme.colors.primary
+              }
+            />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerButton} onPress={handleClearAll}>
+            <Ionicons name="trash" size={24} color={theme.colors.primary} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <FlatList
+        data={notifications}
+        renderItem={renderNotificationItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
+      />
+    </View>
   );
 }
 
@@ -130,32 +153,81 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  section: {
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 16,
   },
-  sectionTitle: {
-    fontSize: 20,
+  headerTitle: {
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 16,
   },
-  preferenceItem: {
+  headerActions: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  headerButton: {
+    padding: 8,
+  },
+  listContainer: {
+    padding: 16,
+  },
+  notificationCard: {
+    borderRadius: 12,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  notificationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+  },
+  notificationType: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    gap: 8,
   },
-  preferenceText: {
-    flex: 1,
-    marginRight: 16,
+  notificationTypeText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
-  preferenceTitle: {
+  notificationContent: {
+    padding: 12,
+    paddingTop: 0,
+  },
+  notificationTitle: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
   },
-  preferenceDescription: {
+  notificationMessage: {
     fontSize: 14,
+    marginBottom: 8,
+  },
+  notificationDate: {
+    fontSize: 12,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
   },
 }); 

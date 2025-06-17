@@ -1,176 +1,164 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Image } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
-import { api } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  avatar?: string;
-}
-
-interface Favorite {
-  id: string;
-  type: 'team' | 'match' | 'news';
-  title: string;
-  image?: string;
-  game?: string;
-  date?: string;
-  status?: string;
-}
+import { Link, useRouter } from 'expo-router';
 
 export default function ProfileScreen() {
-  const theme = useTheme();
-  const [user, setUser] = useState<User | null>(null);
-  const [favorites, setFavorites] = useState<Favorite[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
-
-  const onRefresh = React.useCallback(async () => {
-    setRefreshing(true);
-    try {
-      const [userResponse, favoritesResponse] = await Promise.all([
-        api.get('/user/profile'),
-        api.get('/favorites')
-      ]);
-      setUser(userResponse.data);
-      setFavorites(favoritesResponse.data);
-    } catch (error) {
-      console.error('Veriler yüklenirken hata:', error);
-    } finally {
-      setRefreshing(false);
-    }
-  }, []);
+  const { theme } = useTheme();
+  const router = useRouter();
+  const [user, setUser] = React.useState({
+    username: 'Kullanıcı',
+    email: 'kullanici@example.com',
+    favoriteTeams: [],
+    favoritePlayers: [],
+    notifications: {
+      matchStart: true,
+      scoreChange: true,
+      matchEnd: true,
+      news: true,
+    },
+  });
 
   useEffect(() => {
-    onRefresh();
+    // Burada kullanıcı verilerini yükleyebilirsiniz
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await api.post('/auth/logout');
-      // Kullanıcıyı login sayfasına yönlendir
-    } catch (error) {
-      console.error('Çıkış yapılırken hata:', error);
-    }
+  const handleLogout = () => {
+    // Çıkış işlemleri burada yapılacak
+    router.replace('/');
   };
 
-  const renderFavorites = () => {
-    const filteredFavorites = favorites.filter(fav => {
-      if (activeTab === 0) return true;
-      if (activeTab === 1) return fav.type === 'team';
-      if (activeTab === 2) return fav.type === 'match';
-      if (activeTab === 3) return fav.type === 'news';
-      return false;
-    });
-
-    if (filteredFavorites.length === 0) {
-      return (
-        <View style={styles.emptyContainer}>
-          <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-            Henüz favori eklenmemiş
-          </Text>
-        </View>
-      );
-    }
-
-    return filteredFavorites.map((item) => (
-      <TouchableOpacity key={item.id} style={styles.favoriteItem}>
-        {item.image && (
-          <Image
-            source={{ uri: item.image }}
-            style={styles.favoriteImage}
-            defaultSource={require('@/assets/images/default-image.png')}
-          />
-        )}
-        <View style={styles.favoriteContent}>
-          <Text style={[styles.favoriteTitle, { color: theme.colors.text }]}>
-            {item.title}
-          </Text>
-          {item.game && (
-            <Text style={[styles.favoriteGame, { color: theme.colors.primary }]}>
-              {item.game}
-            </Text>
-          )}
-          {item.date && (
-            <Text style={[styles.favoriteDate, { color: theme.colors.textSecondary }]}>
-              {new Date(item.date).toLocaleDateString('tr-TR')}
-            </Text>
-          )}
-          {item.status && (
-            <Text style={[styles.favoriteStatus, { color: theme.colors.primary }]}>
-              {item.status}
-            </Text>
-          )}
-        </View>
-      </TouchableOpacity>
-    ));
+  const toggleNotification = (type: keyof typeof user.notifications) => {
+    setUser(prev => ({
+      ...prev,
+      notifications: {
+        ...prev.notifications,
+        [type]: !prev.notifications[type]
+      }
+    }));
   };
-
-  if (!user) {
-    return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <Text style={[styles.loadingText, { color: theme.colors.text }]}>
-          Yükleniyor...
-        </Text>
-      </View>
-    );
-  }
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-      <View style={styles.profileHeader}>
-        <Image
-          source={user.avatar ? { uri: user.avatar } : require('@/assets/images/default-avatar.png')}
-          style={styles.avatar}
-        />
-        <Text style={[styles.username, { color: theme.colors.text }]}>
-          {user.username}
-        </Text>
-        <Text style={[styles.email, { color: theme.colors.textSecondary }]}>
-          {user.email}
-        </Text>
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={styles.header}>
+        <View style={[styles.avatarContainer, { backgroundColor: theme.colors.surface }]}>
+          <Ionicons name="person" size={48} color={theme.colors.primary} />
+        </View>
+        <Text style={[styles.username, { color: theme.colors.text }]}>{user.username}</Text>
+        <Text style={[styles.email, { color: theme.colors.textSecondary }]}>{user.email}</Text>
       </View>
 
-      <View style={styles.tabs}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 0 && styles.activeTab]}
-          onPress={() => setActiveTab(0)}
-        >
-          <Text style={[styles.tabText, { color: theme.colors.text }]}>Tümü</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 1 && styles.activeTab]}
-          onPress={() => setActiveTab(1)}
-        >
-          <Text style={[styles.tabText, { color: theme.colors.text }]}>Takımlar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 2 && styles.activeTab]}
-          onPress={() => setActiveTab(2)}
-        >
-          <Text style={[styles.tabText, { color: theme.colors.text }]}>Maçlar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 3 && styles.activeTab]}
-          onPress={() => setActiveTab(3)}
-        >
-          <Text style={[styles.tabText, { color: theme.colors.text }]}>Haberler</Text>
-        </TouchableOpacity>
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Favorilerim</Text>
+        
+        <View style={styles.favoritesContainer}>
+          <TouchableOpacity 
+            style={[styles.favoriteItem, { backgroundColor: theme.colors.surface }]}
+            onPress={() => router.push('/favorites')}
+          >
+            <Ionicons name="heart" size={24} color={theme.colors.primary} />
+            <Text style={[styles.favoriteText, { color: theme.colors.text }]}>Favori Takımlar</Text>
+            <Text style={[styles.favoriteCount, { color: theme.colors.textSecondary }]}>
+              {user.favoriteTeams.length}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.favoriteItem, { backgroundColor: theme.colors.surface }]}
+            onPress={() => router.push('/favorites')}
+          >
+            <Ionicons name="person" size={24} color={theme.colors.primary} />
+            <Text style={[styles.favoriteText, { color: theme.colors.text }]}>Favori Oyuncular</Text>
+            <Text style={[styles.favoriteCount, { color: theme.colors.textSecondary }]}>
+              {user.favoritePlayers.length}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <View style={styles.favoritesContainer}>
-        {renderFavorites()}
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Bildirim Ayarları</Text>
+        
+        <View style={[styles.preferenceItem, { backgroundColor: theme.colors.surface }]}>
+          <View style={styles.preferenceText}>
+            <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
+              Maç Başlangıç Bildirimleri
+            </Text>
+            <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
+              Maç başlangıç bildirimleri
+            </Text>
+          </View>
+          <TouchableOpacity onPress={() => toggleNotification('matchStart')}>
+            <Ionicons
+              name={user.notifications.matchStart ? 'notifications' : 'notifications-off'}
+              size={24}
+              color={user.notifications.matchStart ? theme.colors.primary : theme.colors.textSecondary}
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={[styles.preferenceItem, { backgroundColor: theme.colors.surface }]}>
+          <View style={styles.preferenceText}>
+            <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
+              Skor Değişikliği Bildirimleri
+            </Text>
+            <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
+              Canlı maç skor değişiklikleri
+            </Text>
+          </View>
+          <TouchableOpacity onPress={() => toggleNotification('scoreChange')}>
+            <Ionicons
+              name={user.notifications.scoreChange ? 'notifications' : 'notifications-off'}
+              size={24}
+              color={user.notifications.scoreChange ? theme.colors.primary : theme.colors.textSecondary}
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={[styles.preferenceItem, { backgroundColor: theme.colors.surface }]}>
+          <View style={styles.preferenceText}>
+            <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
+              Maç Sonu Bildirimleri
+            </Text>
+            <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
+              Maç sonuç bildirimleri
+            </Text>
+          </View>
+          <TouchableOpacity onPress={() => toggleNotification('matchEnd')}>
+            <Ionicons
+              name={user.notifications.matchEnd ? 'notifications' : 'notifications-off'}
+              size={24}
+              color={user.notifications.matchEnd ? theme.colors.primary : theme.colors.textSecondary}
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={[styles.preferenceItem, { backgroundColor: theme.colors.surface }]}>
+          <View style={styles.preferenceText}>
+            <Text style={[styles.preferenceTitle, { color: theme.colors.text }]}>
+              Haber Bildirimleri
+            </Text>
+            <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
+              Önemli haberler ve güncellemeler
+            </Text>
+          </View>
+          <TouchableOpacity onPress={() => toggleNotification('news')}>
+            <Ionicons
+              name={user.notifications.news ? 'notifications' : 'notifications-off'}
+              size={24}
+              color={user.notifications.news ? theme.colors.primary : theme.colors.textSecondary}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Ionicons name="log-out-outline" size={24} color={theme.colors.text} />
-        <Text style={[styles.logoutText, { color: theme.colors.text }]}>Çıkış Yap</Text>
+      <TouchableOpacity
+        style={[styles.logoutButton, { backgroundColor: theme.colors.error }]}
+        onPress={handleLogout}
+      >
+        <Ionicons name="log-out" size={24} color="white" />
+        <Text style={styles.logoutText}>Çıkış Yap</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -180,15 +168,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  profileHeader: {
+  header: {
     alignItems: 'center',
-    padding: 20,
+    padding: 32,
   },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+  avatarContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     marginBottom: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   username: {
     fontSize: 24,
@@ -198,84 +188,64 @@ const styles = StyleSheet.create({
   email: {
     fontSize: 16,
   },
-  tabs: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
+  section: {
+    padding: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
     marginBottom: 16,
   },
-  tab: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  activeTab: {
-    borderBottomColor: '#FF0000',
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
   favoritesContainer: {
-    padding: 16,
+    gap: 16,
   },
   favoriteItem: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 8,
-    marginBottom: 12,
-    overflow: 'hidden',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
   },
-  favoriteImage: {
-    width: 80,
-    height: 80,
-  },
-  favoriteContent: {
+  favoriteText: {
     flex: 1,
-    padding: 12,
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 12,
   },
-  favoriteTitle: {
+  favoriteCount: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  preferenceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  preferenceText: {
+    flex: 1,
+    marginRight: 16,
+  },
+  preferenceTitle: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
   },
-  favoriteGame: {
+  preferenceDescription: {
     fontSize: 14,
-    marginBottom: 4,
-  },
-  favoriteDate: {
-    fontSize: 12,
-  },
-  favoriteStatus: {
-    fontSize: 12,
-    marginTop: 4,
-  },
-  emptyContainer: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    fontStyle: 'italic',
-  },
-  loadingText: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginTop: 20,
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
     margin: 16,
-    backgroundColor: 'rgba(255, 0, 0, 0.1)',
-    borderRadius: 8,
+    padding: 16,
+    borderRadius: 12,
+    gap: 8,
   },
   logoutText: {
+    color: 'white',
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 8,
   },
 }); 
