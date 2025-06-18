@@ -1,9 +1,8 @@
 import { store } from '../store';
-import { addNotification, updatePreferences } from '../store/slices/notificationSlice';
-import { NotificationPreferences, NotificationItem } from '../types/notification';
+import { addNotification, updatePreferences, NotificationPreferences, NotificationItem } from '../store/slices/notificationSlice';
 import { toast } from 'react-toastify';
 import { api } from './api';
-import type { Notification } from '../types/notification';
+import { Notification } from '../types/notification';
 
 // UUID üretici
 function generateUUID() {
@@ -22,12 +21,13 @@ function getAnonUserId() {
   return anonUserId;
 }
 
-class NotificationService {
+export class NotificationService {
   private socket: WebSocket | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectTimeout = 5000;
   private static readonly STORAGE_KEY = 'notificationPreferences';
+  private baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
   constructor() {
     this.initializeWebSocket();
@@ -180,52 +180,30 @@ class NotificationService {
     }
   }
 
-  public async sendNotification(title: string, options: NotificationOptions) {
+  async getNotifications(): Promise<Notification[]> {
     try {
-      // Service Worker üzerinden bildirim gönder
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({
-          type: 'NOTIFICATION',
-          title,
-          options
-        });
-      } else {
-        // Service Worker yoksa normal bildirim gönder
-        if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification(title, options);
+      const response = await fetch(`${this.baseUrl}/notifications`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return []; // Bildirimler bulunamadıysa boş dizi döndür
         }
+        throw new Error(`Bildirimler alınamadı: ${response.statusText}`);
       }
+
+      const data = await response.json();
+      return data;
     } catch (error) {
-      console.error('Bildirim gönderilirken hata:', error);
-      toast.error('Bildirim gönderilirken bir hata oluştu');
+      console.error('Bildirimler alınırken hata:', error);
+      return []; // Hata durumunda boş dizi döndür
     }
   }
 }
 
-export const notificationService = new NotificationService();
-
-export const getNotifications = async (): Promise<Notification[]> => {
-  try {
-    const response = await api.get('/notifications');
-    return response.data;
-  } catch (error) {
-    console.error('Bildirimler alınırken hata:', error);
-    return [];
-  }
-};
-
-export const markNotificationAsRead = async (notificationId: string): Promise<void> => {
-  try {
-    await api.put(`/notifications/${notificationId}/read`);
-  } catch (error) {
-    console.error('Bildirim okundu olarak işaretlenirken hata:', error);
-  }
-};
-
-export const deleteNotification = async (notificationId: string): Promise<void> => {
-  try {
-    await api.delete(`/notifications/${notificationId}`);
-  } catch (error) {
-    console.error('Bildirim silinirken hata:', error);
-  }
-}; 
+export const notificationService = new NotificationService(); 

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { matchService } from '../services/api';
 import {
   Container,
   Table,
@@ -28,6 +29,7 @@ import {
   InputLabel,
   Grid,
   Badge,
+  Alert,
 } from '@mui/material';
 import {
   Favorite as FavoriteIcon,
@@ -45,22 +47,7 @@ import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import '../styles/Matches.css';
 import { useNotifications } from '../hooks/useNotifications';
-import { useDispatch } from 'react-redux';
-import { addNotification } from '../store/slices/notificationSlice';
-import { useQuery } from 'react-query';
-import matchService from '../services/matchService';
-import { Match } from '../types/match';
-import { useTheme } from '../contexts/ThemeContext';
-import { useAuth } from '../hooks/useAuth';
-
-interface NotificationSettings {
-  enabled: boolean;
-  beforeMatch: number;
-  matchStart: boolean;
-  matchEnd: boolean;
-  scoreUpdate: boolean;
-  round_info?: string;
-}
+import { Match, NotificationSettings } from '../types/match';
 
 type FilterType = 'all' | 'live' | 'upcoming' | 'past';
 
@@ -70,31 +57,6 @@ const filterLabels: Record<FilterType, string> = {
   upcoming: 'Yaklaşan',
   past: 'Tamamlanan',
 };
-
-const normalize = (text: string) => {
-  if (!text) return '';
-  return text
-    .toLowerCase()
-    .replace(/ş/g, 's')
-    .replace(/ı/g, 'i')
-    .replace(/ç/g, 'c')
-    .replace(/ü/g, 'u')
-    .replace(/ö/g, 'o')
-    .replace(/ğ/g, 'g')
-    .replace(/[^a-z0-9]/g, '')
-    .replace(/\s+/g, '')
-    .trim();
-};
-
-const StatusCell = styled(TableCell)(({ theme }) => ({
-  width: '120px',
-  textAlign: 'center',
-}));
-
-const TimeCell = styled(TableCell)(({ theme }) => ({
-  width: '150px',
-  textAlign: 'center',
-}));
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   '&.MuiTableCell-head': {
@@ -199,6 +161,51 @@ const NotificationSwitch = styled(Switch)(({ theme }) => ({
 
 const DEFAULT_TOURNAMENT_LOGO = '/logos/default-tournament-logo.svg';
 
+const getDateLabel = (date: Date | null | undefined) => {
+  if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+    return '-';
+  }
+
+  try {
+    // Tarihi yerel saat dilimine çevir
+    const localDate = new Date(date.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' }));
+    
+    if (isToday(localDate)) return 'Bugün';
+    if (isTomorrow(localDate)) return 'Yarın';
+    if (isYesterday(localDate)) return 'Dün';
+    return formatDate(localDate, 'd MMMM yyyy', { locale: tr });
+  } catch (error) {
+    console.error('Tarih formatlanırken hata:', error);
+    return '-';
+  }
+};
+
+const StatusCell = styled(TableCell)(({ theme }) => ({
+  textAlign: 'center',
+  minWidth: 90,
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  padding: theme.spacing(1.5, 2),
+}));
+
+const TimeCell = styled(TableCell)(({ theme }) => ({
+  textAlign: 'right',
+  minWidth: 120,
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  padding: theme.spacing(1.5, 2),
+}));
+
+// Takım ve turnuva logoları için normalize fonksiyonu (Türkçe karakter desteği)
+const normalize = (str: string) =>
+  str
+    .toLowerCase()
+    .replace(/ş/g, 's')
+    .replace(/ı/g, 'i')
+    .replace(/ç/g, 'c')
+    .replace(/ü/g, 'u')
+    .replace(/ö/g, 'o')
+    .replace(/ğ/g, 'g')
+    .replace(/[^a-z0-9]/g, '');
+
 const getNotificationFromStorage = (id: string): NotificationSettings => {
   try {
     const data = localStorage.getItem(`match_notifications_${id}`);
@@ -229,19 +236,10 @@ const showWebNotification = (title: string, options: NotificationOptions) => {
 };
 
 // Turnuva logosu için url önceliği: http/https ile başlıyorsa onu kullan, yoksa local events, yoksa default
-const getTeamLogo = (teamName: string) => {
-  if (!teamName) return '/logos/default.png';
-  const normalizedName = normalize(teamName);
-  return `/logos/${normalizedName}.png`;
-};
-
 const getTournamentLogo = (match: Match) => {
   const tName = match.tournament_name || match.match_event || '';
-  if (!tName) return '/events/default-tournament-logo.png';
-  
   const normalizedName = normalize(tName);
   const logoPath = `/events/processed/${normalizedName}.png`;
-  
   return logoPath;
 };
 
@@ -291,32 +289,15 @@ function getImportanceMessage(round: string, team1: string, team2: string) {
   return getRandomMessage(defaultMessages, team1, team2);
 }
 
-const formatMatchTime = (timeStr: string) => {
-  if (timeStr === 'LIVE') return 'CANLI';
-  
-  const date = new Date(timeStr);
-  if (isNaN(date.getTime())) return 'Bilinmeyen zaman';
-  const now = new Date();
-  const diffInMinutes = Math.floor((date.getTime() - now.getTime()) / (1000 * 60));
-  
-  if (diffInMinutes < 0) return 'Başladı';
-  if (diffInMinutes < 60) return `${diffInMinutes} dakika sonra`;
-  if (diffInMinutes < 24 * 60) return `${Math.floor(diffInMinutes / 60)} saat sonra`;
-  
-  return formatDate(date, 'd MMMM yyyy HH:mm', { locale: tr });
-};
-
-// İngilizce zaman stringini Türkçeye çevir
-function translateTimeString(str: string) {
-  if (!str) return '';
-  // Örnek: "1d 6h from now" veya "7h 34m from now"
-  let result = str;
-  result = result.replace(/(\d+)d/g, '$1 gün');
-  result = result.replace(/(\d+)h/g, '$1 saat');
-  result = result.replace(/(\d+)m/g, '$1 dakika');
-  result = result.replace('from now', 'sonra');
-  result = result.replace('ago', 'önce');
-  return result.trim();
+// Kalan süreyi Türkçeleştirici fonksiyonu tekrar ekle
+function formatTimeUntilTr(timeStr: string): string {
+  if (!timeStr) return '';
+  return timeStr
+    .replace(/from now/i, '')
+    .replace(/(\d+)d/g, '$1 gün')
+    .replace(/(\d+)h/g, '$1 saat')
+    .replace(/(\d+)m/g, '$1 dakika')
+    .trim();
 }
 
 const Matches: React.FC = () => {
@@ -330,8 +311,6 @@ const Matches: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
-  const [selectedRawDate, setSelectedRawDate] = useState<string>('');
-  const { notifications, setNotifications } = useNotifications();
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
     enabled: false,
     beforeMatch: 15,
@@ -339,18 +318,19 @@ const Matches: React.FC = () => {
     matchEnd: true,
     scoreUpdate: true,
   });
-  const dispatch = useDispatch();
+  const [selectedRawDate, setSelectedRawDate] = useState<string>('');
+  const { notifications, setNotifications } = useNotifications();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchMatches = async () => {
       setLoading(true);
       try {
         let response;
-        // Sadece 'past' sekmesinde tarih parametresi gönder
         const params: any = {};
         if (filter === 'past') {
           if (selectedRawDate) {
-            params.date = selectedRawDate; // yyyy-MM-dd formatında
+            params.date = selectedRawDate;
           } else if (selectedDate) {
             let dateToSend: Date;
             if (typeof selectedDate === 'string') {
@@ -371,13 +351,13 @@ const Matches: React.FC = () => {
         }
         switch (filter) {
           case 'live':
-            response = await matchService.getLiveMatches();
+            response = await matchService.getMatches();
             break;
           case 'upcoming':
-            response = await matchService.getMatches({ status: 'upcoming' });
+            response = await matchService.getMatches();
             break;
           case 'past':
-            response = await matchService.getMatches({ ...params, status: 'completed' });
+            response = await matchService.getMatches();
             break;
           default:
             response = await matchService.getMatches();
@@ -387,17 +367,37 @@ const Matches: React.FC = () => {
           toast.info('Seçili kriterlere uygun maç bulunamadı.');
         }
 
-        const matchesWithLogos = response.map((match: any): Match => {
+        const matchesWithLogos = response.map((match: Match) => {
           let matchDate: Date | null = null;
           if (match.parsed_date) {
             matchDate = new Date(match.parsed_date);
           } else if (match.date) {
             matchDate = new Date(match.date);
+          } else if (match.time_until_match && match.time_until_match !== 'LIVE') {
+            matchDate = new Date(match.time_until_match);
+          } else if (match.time_completed) {
+            matchDate = new Date(match.time_completed);
+          }
+          if (matchDate && isNaN(matchDate.getTime())) {
+            matchDate = null;
           }
 
-          const uniqueKey = `${match.id}_${match.team1}_${match.team2}`;
-          let notifications: NotificationSettings;
+          const team1LogoPng = match.team1 ? '/logos/' + normalize(match.team1) + '.png' : null;
+          const team1LogoSvg = match.team1 ? '/logos/' + normalize(match.team1) + '.svg' : null;
+          const team2LogoPng = match.team2 ? '/logos/' + normalize(match.team2) + '.png' : null;
+          const team2LogoSvg = match.team2 ? '/logos/' + normalize(match.team2) + '.svg' : null;
 
+          const tournamentLogoName = match.tournament_name
+            ? `/events/${normalize(match.tournament_name)}.png`
+            : '/events/default-tournament-logo.png';
+
+          const tournamentIcon = match.tournament_icon
+            || match.tournamentIcon
+            || tournamentLogoName
+            || DEFAULT_TOURNAMENT_LOGO;
+
+          const uniqueKey = `${match.id}_${match.team1}_${match.team2}_${match.tournament_name || match.match_event}`;
+          let notifications: NotificationSettings;
           if (match.notifications) {
             notifications = {
               enabled: match.notifications.enabled === true,
@@ -410,7 +410,6 @@ const Matches: React.FC = () => {
             notifications = getNotificationFromStorage(uniqueKey);
           }
 
-          // Maç status'unu belirle
           let status: 'live' | 'upcoming' | 'completed' = 'upcoming';
           if (match.time_completed) {
             status = 'completed';
@@ -420,21 +419,6 @@ const Matches: React.FC = () => {
             status = 'upcoming';
           }
 
-          // Takım logoları için normalize edilmiş isimle hem .png hem .svg dene
-          const team1LogoPng = match.team1 ? `/logos/${normalize(match.team1)}.png` : null;
-          const team1LogoSvg = match.team1 ? `/logos/${normalize(match.team1)}.svg` : null;
-          const team2LogoPng = match.team2 ? `/logos/${normalize(match.team2)}.png` : null;
-          const team2LogoSvg = match.team2 ? `/logos/${normalize(match.team2)}.svg` : null;
-
-          // Turnuva logosu için processed klasörünü kullan
-          const tournamentLogoName = match.tournament_name
-            ? `/events/processed/${normalize(match.tournament_name)}.png`
-            : '/events/default-tournament-logo.png';
-
-          const tournamentIcon = match.tournament_icon
-            || match.tournamentIcon
-            || tournamentLogoName;
-
           return {
             ...match,
             team1LogoPng,
@@ -442,17 +426,15 @@ const Matches: React.FC = () => {
             team2LogoPng,
             team2LogoSvg,
             tournamentIcon,
-            date: matchDate || new Date(),
             notifications,
             status,
+            matchDate
           };
         });
 
         setMatches(matchesWithLogos);
       } catch (error) {
-        console.error('Maçlar yüklenirken hata oluştu:', error);
-        toast.error('Maçlar yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
-        setMatches([]);
+        setError('Maçlar yüklenirken bir hata oluştu');
       } finally {
         setLoading(false);
       }
@@ -514,6 +496,18 @@ const Matches: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (matches.length > 0 && selectedDate) {
+      console.log('Seçilen:', formatDate(selectedDate, 'yyyy-MM-dd'));
+      matches.forEach(m => {
+        if (m.date) {
+          const matchDateObj = new Date(m.date);
+          console.log('Maç:', formatDate(matchDateObj, 'yyyy-MM-dd'), m);
+        }
+      });
+    }
+  }, [matches, selectedDate]);
+
   const getStatusChip = useCallback((match: Match) => {
     if (match.time_until_match === 'LIVE') {
       return <StatusChip status="live" label="Canlı" size="small" />;
@@ -529,9 +523,9 @@ const Matches: React.FC = () => {
   const filteredMatches = useMemo(() => {
     return matches.filter(match => {
       if (filter === 'live') {
-        return match.status === 'live';
+        return match.time_until_match === 'LIVE';
       } else if (filter === 'upcoming') {
-        return match.status === 'upcoming';
+        return !match.time_completed && match.time_until_match !== 'LIVE';
       } else if (filter === 'past') {
         return match.status === 'completed';
       } else if (filter === 'all') {
@@ -541,23 +535,6 @@ const Matches: React.FC = () => {
       return true;
     });
   }, [matches, filter]);
-
-  // Tarih filtresini uygula
-  const dateFilteredMatches = useMemo(() => {
-    if (!selectedDate || filter !== 'past') return filteredMatches;
-    
-    const startOfDay = new Date(selectedDate);
-    startOfDay.setHours(0, 0, 0, 0);
-    
-    const endOfDay = new Date(selectedDate);
-    endOfDay.setHours(23, 59, 59, 999);
-    
-    return filteredMatches.filter(match => {
-      if (!match.time_completed) return false;
-      const matchDate = new Date(match.time_completed);
-      return matchDate >= startOfDay && matchDate <= endOfDay;
-    });
-  }, [filteredMatches, selectedDate, filter]);
 
   // Okunmamış bildirimleri say
   const unreadCount = useMemo(() => {
@@ -597,6 +574,7 @@ const Matches: React.FC = () => {
   }, [favorites]);
 
   const handleNotificationSettings = (match: Match, index: number) => {
+    if (match.time_completed) return;
     setSelectedMatch({ ...match, _rowIndex: index });
     setNotificationSettings({
       enabled: match.notifications?.enabled ?? false,
@@ -619,72 +597,34 @@ const Matches: React.FC = () => {
         scoreUpdate: notificationSettings.scoreUpdate,
         round_info: selectedMatch.round_info || selectedMatch.match_series || '',
       };
-
-      // Bildirim açılıyorsa random mesajı ve zamanı kaydet
       if (notificationSettings.enabled) {
         const messageKey = `match_notification_message_${uniqueKey}`;
-        const timeKey = `match_notification_time_${uniqueKey}`;
         const randomMessage = getImportanceMessage(updatedSettings.round_info, selectedMatch.team1, selectedMatch.team2);
-        
-        // Mesaj ve zamanı localStorage'a kaydet
         localStorage.setItem(messageKey, randomMessage);
+        const timeKey = `match_notification_time_${uniqueKey}`;
         localStorage.setItem(timeKey, new Date().toISOString());
-        
-        // Redux store'u güncelle
-        setMatches(prev => prev.map((m, idx) => 
-          m.id === selectedMatch.id && idx === selectedMatch._rowIndex 
-            ? { ...m, notifications: updatedSettings } 
-            : m
-        ));
-
-        // Bildirim sesi çal ve web notification göster
+      }
+      localStorage.setItem(`match_notifications_${uniqueKey}`, JSON.stringify(updatedSettings));
+      setMatches(prev => prev.map((m, idx) => m.id === selectedMatch.id && idx === selectedMatch._rowIndex ? { ...m, notifications: updatedSettings } : m));
+      if (notificationSettings.enabled) {
         playNotificationSound();
         showWebNotification('Harika! Bildirimler Açıldı', {
           body: `${selectedMatch.team1} ile ${selectedMatch.team2} arasındaki maç için bildirimleri açtın. Heyecanı kaçırma!`,
           icon: '/notification-icon.png'
         });
-
-        dispatch(addNotification({
-          id: uniqueKey,
-          title: `${selectedMatch.team1} vs ${selectedMatch.team2}`,
-          message: randomMessage,
-          type: 'matchStart',
-          read: false,
-          timestamp: new Date().toISOString(),
-        }));
       } else {
-        // Bildirim kapatılıyorsa mesajı ve zamanı sil
-        const messageKey = `match_notification_message_${uniqueKey}`;
-        const timeKey = `match_notification_time_${uniqueKey}`;
-        localStorage.removeItem(messageKey);
-        localStorage.removeItem(timeKey);
-
-        // Redux store'u güncelle
-        setMatches(prev => prev.map((m, idx) => 
-          m.id === selectedMatch.id && idx === selectedMatch._rowIndex 
-            ? { ...m, notifications: updatedSettings } 
-            : m
-        ));
+        toast.info('Bu maç için bildirimler kapatıldı');
       }
-
-      // Bildirim ayarlarını localStorage'a kaydet
-      localStorage.setItem(`match_notifications_${uniqueKey}`, JSON.stringify(updatedSettings));
     }
     setNotificationDialogOpen(false);
   };
 
   // Bildirim ikonunu güncelle
   const getNotificationIcon = (match: Match) => {
-    if (!match.notifications?.enabled) {
-      return <NotificationsIcon />;
+    if (match.notifications?.enabled) {
+      return <NotificationsActiveIcon color="success" />;
     }
-    if (match.time_completed) {
-      return <NotificationsOffIcon />;
-    }
-    if (match.time_until_match === 'LIVE') {
-      return <NotificationsActiveIcon color="error" />;
-    }
-    return <NotificationsActiveIcon color="success" />;
+    return <NotificationsOffIcon color="disabled" />;
   };
 
   useEffect(() => {
@@ -703,6 +643,11 @@ const Matches: React.FC = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }} role="main" aria-label="Maç Listesi">
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
       <Box sx={{ mb: 4 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={6}>
@@ -837,54 +782,30 @@ const Matches: React.FC = () => {
                         filteredMatches.map((match, index) => (
                           <AnimatedTableRow key={`${match.id}-${index}`} sx={{ height: 60 }}>
                             <TableCell align="center" sx={{ verticalAlign: 'middle' }}>
-                              <motion.div whileTap={{ scale: 1.3 }}>
-                                <IconButton
-                                  onClick={() => toggleFavorite(match)}
-                                  aria-label={favorites.includes(`${match.team1}-${match.team2}-${match.match_event || match.tournament_name}`) 
-                                    ? 'Favorilerden çıkar' 
-                                    : 'Favorilere ekle'}
-                                >
-                                  {favorites.includes(`${match.team1}-${match.team2}-${match.match_event || match.tournament_name}`) 
-                                    ? <FavoriteIcon color="error" /> 
-                                    : <FavoriteBorderIcon />}
-                                </IconButton>
-                              </motion.div>
+                              <IconButton
+                                onClick={() => toggleFavorite(match)}
+                                aria-label={favorites.includes(`${match.team1}-${match.team2}-${match.match_event || match.tournament_name}`) 
+                                  ? 'Favorilerden çıkar' 
+                                  : 'Favorilere ekle'}
+                              >
+                                {favorites.includes(`${match.team1}-${match.team2}-${match.match_event || match.tournament_name}`) 
+                                  ? <FavoriteIcon color="error" /> 
+                                  : <FavoriteBorderIcon />}
+                              </IconButton>
                             </TableCell>
                             <TableCell align="center" sx={{ verticalAlign: 'middle' }}>
                               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                                <Tooltip title={match.time_completed ? t('notifications.disabled.completed') : (match.time_until_match === 'LIVE' ? t('notifications.disabled.live') : (match.notifications?.enabled ? t('notifications.edit') : t('notifications.add')))}>
+                                <Tooltip title={match.notifications?.enabled ? 'Bu maç için bildirim açık' : 'Bu maç için bildirim kapalı'}>
                                   <span>
                                     <IconButton
-                                      onClick={() => handleNotificationSettings(match, index)}
-                                      aria-label={match.notifications?.enabled ? t('notifications.edit') : t('notifications.add')}
+                                      onClick={() => !match.time_completed && handleNotificationSettings(match, index)}
+                                      aria-label={match.notifications?.enabled ? 'Bildirimleri Kapat' : 'Bildirimleri Aç'}
+                                      disabled={!!match.time_completed}
                                     >
                                       {getNotificationIcon(match)}
                                     </IconButton>
                                   </span>
                                 </Tooltip>
-                                {match.notifications && match.notifications.enabled && !match.time_completed && match.time_until_match !== 'LIVE' && (
-                                  <Tooltip title="Bildirimi kapat">
-                                    <IconButton
-                                      color="error"
-                                      size="small"
-                                      onClick={() => {
-                                        // Unique anahtar oluştur
-                                        const uniqueKey = `${match.id}_${match.team1}_${match.team2}_${match.tournament_name || match.match_event}`;
-                                        const updatedSettings = {
-                                          enabled: false,
-                                          beforeMatch: typeof match.notifications?.beforeMatch === 'number' ? match.notifications.beforeMatch : 15,
-                                          matchStart: typeof match.notifications?.matchStart === 'boolean' ? match.notifications.matchStart : true,
-                                          matchEnd: typeof match.notifications?.matchEnd === 'boolean' ? match.notifications.matchEnd : true,
-                                          scoreUpdate: typeof match.notifications?.scoreUpdate === 'boolean' ? match.notifications.scoreUpdate : true,
-                                        };
-                                        localStorage.setItem(`match_notifications_${uniqueKey}`, JSON.stringify(updatedSettings));
-                                        setMatches(prev => prev.map((m, idx) => m.id === match.id && idx === index ? { ...m, notifications: updatedSettings } : m));
-                                      }}
-                                    >
-                                      <NotificationsOffIcon fontSize="small" />
-                                    </IconButton>
-                                  </Tooltip>
-                                )}
                               </Box>
                             </TableCell>
                             <TableCell sx={{ verticalAlign: 'middle', minWidth: 200 }}>
@@ -934,7 +855,7 @@ const Matches: React.FC = () => {
                                   borderRadius: '50%'
                                 }}>
                                   <img
-                                    src={getTeamLogo(match.team1)}
+                                    src={match.team1LogoPng || match.team1LogoSvg || match.team1_logo_url || '/logos/default.png'}
                                     alt={match.team1}
                                     style={{
                                       width: 36,
@@ -1027,7 +948,7 @@ const Matches: React.FC = () => {
                                   borderRadius: '50%'
                                 }}>
                                   <img
-                                    src={getTeamLogo(match.team2)}
+                                    src={match.team2LogoPng || match.team2LogoSvg || match.team2_logo_url || '/logos/default.png'}
                                     alt={match.team2}
                                     style={{
                                       width: 36,
@@ -1106,11 +1027,14 @@ const Matches: React.FC = () => {
                               {getStatusChip(match)}
                             </StatusCell>
                             <TimeCell sx={{ verticalAlign: 'middle' }}>
-                              {match.time_until_match && match.time_until_match !== 'LIVE' && !match.time_completed && (
-                                <Typography variant="body2" color="text.secondary">
-                                  {translateTimeString(match.time_until_match)}
-                                </Typography>
-                              )}
+                              <Typography variant="body2" color="text.secondary">
+                                {getDateLabel(match.date)}
+                                {match.time_until_match && match.time_until_match !== 'LIVE' && !match.time_completed && (
+                                  <Box component="span" sx={{ ml: 1 }}>
+                                    {formatTimeUntilTr(match.time_until_match)}
+                                  </Box>
+                                )}
+                              </Typography>
                             </TimeCell>
                           </AnimatedTableRow>
                         ))
@@ -1238,7 +1162,6 @@ const Matches: React.FC = () => {
           <Button
             onClick={saveNotificationSettings}
             variant="contained"
-            disabled={!notificationSettings.enabled}
             startIcon={<NotificationsActiveIcon />}
           >
             {t('notifications.save')}

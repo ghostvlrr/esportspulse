@@ -1,70 +1,56 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Box, Typography, Button, Container } from '@mui/material';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import React from 'react';
+import { ErrorBoundary as ReactErrorBoundary } from 'react-error-boundary';
+import { Box, Typography, Button } from '@mui/material';
 
-interface Props {
-  children: ReactNode;
+interface ErrorFallbackProps {
+  error: Error;
+  resetErrorBoundary: () => void;
 }
 
-interface State {
-  hasError: boolean;
-  error: Error | null;
-}
-
-class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false,
-    error: null,
-  };
-
-  public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
-  }
-
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo);
-  }
-
-  public render() {
-    if (this.state.hasError) {
+const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetErrorBoundary }) => {
   return (
-        <Container maxWidth="sm">
     <Box
       display="flex"
       flexDirection="column"
       alignItems="center"
       justifyContent="center"
-            minHeight="80vh"
+      minHeight="400px"
+      p={3}
       textAlign="center"
     >
-            <ErrorOutlineIcon
-              sx={{
-                fontSize: 100,
-                color: 'error.main',
-                mb: 2,
-              }}
-            />
-            <Typography variant="h4" component="h1" gutterBottom>
-              Bir Hata Oluştu
+      <Typography variant="h5" color="error" gutterBottom>
+        Bir şeyler yanlış gitti!
       </Typography>
       <Typography variant="body1" color="text.secondary" paragraph>
-              Üzgünüz, bir şeyler yanlış gitti. Lütfen sayfayı yenileyin veya daha sonra tekrar deneyin.
+        {error.message}
       </Typography>
       <Button
         variant="contained"
         color="primary"
-              onClick={() => window.location.reload()}
+        onClick={resetErrorBoundary}
         sx={{ mt: 2 }}
       >
-              Sayfayı Yenile
+        Tekrar Dene
       </Button>
     </Box>
-        </Container>
-      );
+  );
+};
+
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
 }
 
-    return this.props.children;
-  }
-}
+const ErrorBoundary: React.FC<ErrorBoundaryProps> = ({ children }) => {
+  return (
+    <ReactErrorBoundary
+      FallbackComponent={ErrorFallback}
+      onReset={() => {
+        window.location.reload();
+      }}
+    >
+      {children}
+    </ReactErrorBoundary>
+  );
+};
 
 export default ErrorBoundary; 

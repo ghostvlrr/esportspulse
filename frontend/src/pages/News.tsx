@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/News.css';
-import { Container, Typography } from '@mui/material';
+// import { Container, Grid, Typography, Box, CircularProgress } from '@mui/material';
 import { api } from '../services/api';
 // import NewsCard from '../components/NewsCard';
 
@@ -59,10 +59,6 @@ const News: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Haberler
-      </Typography>
     <div className="news-container">
       <div className="news-header">
         <h1>E-Spor Haberleri</h1>
@@ -115,7 +111,6 @@ const News: React.FC = () => {
         ))}
       </div>
     </div>
-    </Container>
   );
 };
 

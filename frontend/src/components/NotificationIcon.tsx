@@ -5,7 +5,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { NotificationItem } from '../types/notification';
+import { NotificationItem } from '../store/slices/notificationSlice';
 
 const NotificationIcon: React.FC = () => {
   const navigate = useNavigate();

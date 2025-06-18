@@ -29,23 +29,25 @@ export interface Match {
   match_series?: string;
   tournament_name?: string;
   round_info?: string;
-  status?: 'live' | 'upcoming' | 'completed';
+  status?: string;
   match_page?: string;
   tournament_icon?: string;
   tournamentIcon?: string;
-  date: Date | null;
-  notifications?: {
-    enabled: boolean;
-    beforeMatch: number;
-    matchStart: boolean;
-    matchEnd: boolean;
-    scoreUpdate: boolean;
-    round_info?: string;
-  };
+  date: Date;
+  notifications: Required<NotificationSettings>;
   team1LogoPng?: string | null;
   team1LogoSvg?: string | null;
   team2LogoPng?: string | null;
   team2LogoSvg?: string | null;
   _rowIndex?: number;
   parsed_date?: string;
+  matchDate?: Date | null;
+}
+
+export interface NotificationSettings {
+  enabled: boolean;
+  beforeMatch: number;
+  matchStart: boolean;
+  matchEnd: boolean;
+  scoreUpdate: boolean;
 } 

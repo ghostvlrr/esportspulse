@@ -13,14 +13,21 @@ interface Notification {
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const response = await api.get('/notifications');
         setNotifications(response.data);
       } catch (error) {
         console.error('Bildirimler yüklenirken hata oluştu:', error);
+        setError('Bildirimler yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -40,6 +47,7 @@ export const useNotifications = () => {
 
   const markAsRead = async (notificationId: string) => {
     try {
+      setError(null);
       await api.put(`/notifications/${notificationId}/read`);
       setNotifications(prev =>
         prev.map(notification =>
@@ -50,17 +58,20 @@ export const useNotifications = () => {
       );
     } catch (error) {
       console.error('Bildirim okundu olarak işaretlenirken hata oluştu:', error);
+      setError('Bildirim okundu olarak işaretlenirken bir hata oluştu.');
     }
   };
 
   const deleteNotification = async (notificationId: string) => {
     try {
+      setError(null);
       await api.delete(`/notifications/${notificationId}`);
       setNotifications(prev =>
         prev.filter(notification => notification.id !== notificationId)
       );
     } catch (error) {
       console.error('Bildirim silinirken hata oluştu:', error);
+      setError('Bildirim silinirken bir hata oluştu.');
     }
   };
 
@@ -68,6 +79,8 @@ export const useNotifications = () => {
     notifications,
     setNotifications,
     markAsRead,
-    deleteNotification
+    deleteNotification,
+    error,
+    loading
   };
 }; 

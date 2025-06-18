@@ -16,9 +16,12 @@
       "package": "com.esportspulse.mobile"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-font"
     ],
     "scheme": "esportspulse",
-    "sdkVersion": "53.0.0"
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    }
   }
 }

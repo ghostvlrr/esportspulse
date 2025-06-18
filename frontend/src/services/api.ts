@@ -10,11 +10,15 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true
 });
 
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('API İsteği:', config.method?.toUpperCase(), config.url);
+    }
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -22,6 +26,7 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.error('API İstek Hatası:', error);
     return Promise.reject(error);
   }
 );
@@ -29,13 +34,23 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('API Yanıtı:', response.status, response.config.url);
+    }
     return response;
   },
   async (error) => {
-    const errorMessage = error.response?.data?.message || error.message;
-    toast.error(`Bir hata oluştu: ${errorMessage}`);
-    
     const originalRequest = error.config;
+    const errorMessage = error.response?.data?.message || error.message;
+
+    // Rate limit hatası için yeniden deneme
+    if (error.response?.status === 429 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      const retryDelay = error.response.headers['retry-after'] || 1000;
+      
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+      return api(originalRequest);
+    }
 
     // Token yenileme işlemi
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -56,6 +71,11 @@ api.interceptors.response.use(
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }
+    }
+
+    // Hata mesajını göster
+    if (errorMessage) {
+      toast.error(`Bir hata oluştu: ${errorMessage}`);
     }
 
     return Promise.reject(error);
@@ -81,68 +101,138 @@ export const authService = {
 
 export const matchService = {
   getMatches: async (params?: any) => {
-    const response = await api.get('/matches', { params });
-    return response.data;
+    try {
+      const response = await api.get('/matches', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Maçlar alınırken hata:', error);
+      return [];
+    }
   },
   getMatchById: async (id: string) => {
-    const response = await api.get(`/matches/${id}`);
-    return response.data;
+    try {
+      const response = await api.get(`/matches/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Maç detayı alınırken hata:', error);
+      return null;
+    }
   },
   getLiveMatches: async () => {
-    const response = await api.get('/matches/live');
-    return response.data;
+    try {
+      const response = await api.get('/matches/live');
+      return response.data;
+    } catch (error) {
+      console.error('Canlı maçlar alınırken hata:', error);
+      return [];
+    }
   },
 };
 
 export const teamService = {
   getTeams: async (params?: any) => {
-    const response = await api.get('/teams', { params });
-    return response.data;
+    try {
+      const response = await api.get('/teams', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Takımlar alınırken hata:', error);
+      return [];
+    }
   },
   getTeamById: async (id: string) => {
-    const response = await api.get(`/teams/${id}`);
-    return response.data;
+    try {
+      const response = await api.get(`/teams/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Takım detayı alınırken hata:', error);
+      return null;
+    }
   },
   getTeamStats: async (id: string) => {
-    const response = await api.get(`/teams/${id}/stats`);
-    return response.data;
+    try {
+      const response = await api.get(`/teams/${id}/stats`);
+      return response.data;
+    } catch (error) {
+      console.error('Takım istatistikleri alınırken hata:', error);
+      return null;
+    }
   },
 };
 
 export const newsService = {
   getNews: async (params?: any) => {
-    const response = await api.get('/news', { params });
-    return response.data;
+    try {
+      const response = await api.get('/news', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Haberler alınırken hata:', error);
+      return [];
+    }
   },
   getNewsById: async (id: string) => {
-    const response = await api.get(`/news/${id}`);
-    return response.data;
+    try {
+      const response = await api.get(`/news/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Haber detayı alınırken hata:', error);
+      return null;
+    }
   },
   getNewsByCategory: async (category: string) => {
-    const response = await api.get(`/news/category/${category}`);
-    return response.data;
+    try {
+      const response = await api.get(`/news/category/${category}`);
+      return response.data;
+    } catch (error) {
+      console.error('Kategori haberleri alınırken hata:', error);
+      return [];
+    }
   },
 };
 
 export const userService = {
   getProfile: async () => {
-    const response = await api.get('/users/profile');
-    return response.data;
+    try {
+      const response = await api.get('/users/profile');
+      return response.data;
+    } catch (error) {
+      console.error('Profil bilgileri alınırken hata:', error);
+      return null;
+    }
   },
   updateProfile: async (userData: any) => {
-    const response = await api.put('/users/profile', userData);
-    return response.data;
+    try {
+      const response = await api.put('/users/profile', userData);
+      return response.data;
+    } catch (error) {
+      console.error('Profil güncellenirken hata:', error);
+      throw error;
+    }
   },
   getFavorites: async () => {
-    const response = await api.get('/users/favorites');
-    return response.data;
+    try {
+      const response = await api.get('/users/favorites');
+      return response.data;
+    } catch (error) {
+      console.error('Favoriler alınırken hata:', error);
+      return [];
+    }
   },
   addFavorite: async (type: string, id: string) => {
-    const response = await api.post('/users/favorites', { type, id });
-    return response.data;
+    try {
+      const response = await api.post('/users/favorites', { type, id });
+      return response.data;
+    } catch (error) {
+      console.error('Favori eklenirken hata:', error);
+      throw error;
+    }
   },
   removeFavorite: async (type: string, id: string) => {
-    const response = await api.delete(`/users/favorites/${type}/${id}`);
-    return response.data;
+    try {
+      const response = await api.delete(`/users/favorites/${type}/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Favori kaldırılırken hata:', error);
+      throw error;
+    }
   },
 }; 

@@ -12,8 +12,7 @@ import {
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { updatePreferences } from '../store/slices/notificationSlice';
-import { NotificationPreferences } from '../types/notification';
+import { updatePreferences, NotificationPreferences } from '../store/slices/notificationSlice';
 import { notificationService } from '../services/notificationService';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';

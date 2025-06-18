@@ -1,19 +1,12 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import '../styles/Teams.css';
 import { api } from '../services/api';
 import { Favorite, FavoriteBorder, NotificationsActive, NotificationsOff } from '@mui/icons-material';
 import { CircularProgress, IconButton, Tooltip, Badge, Dialog, DialogTitle, DialogContent, DialogActions, Button, Switch, FormControlLabel, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { useNotifications } from '../contexts/NotificationContext';
 import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
-import { useQuery } from 'react-query';
-import { getTeams } from '../services/teamService';
-import { Box, Typography, Grid, Card, CardContent, CardMedia, Chip } from '@mui/material';
-import { useTheme } from '../contexts/ThemeContext';
 
 interface NotificationSettings {
   enabled: boolean;
@@ -46,6 +39,7 @@ const Teams: React.FC = () => {
     return stored ? JSON.parse(stored) : [];
   });
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
+  const [selectedTeam] = useState<Team | null>(null);
   const [tempSettings, setTempSettings] = useState<NotificationSettings>({
     enabled: true,
     matchStart: true,
@@ -313,7 +307,7 @@ const Teams: React.FC = () => {
         fullWidth
       >
         <DialogTitle>
-          {/* selectedTeam?.name */} - Bildirim Ayarları
+          {selectedTeam?.name} - Bildirim Ayarları
         </DialogTitle>
         <DialogContent>
           <div className="notification-settings">

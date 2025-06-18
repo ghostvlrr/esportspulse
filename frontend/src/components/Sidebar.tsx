@@ -84,7 +84,7 @@ const Sidebar: React.FC = () => {
     };
 
     window.addEventListener('keydown', handleEsc);
-      document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
 
     return () => {
       window.removeEventListener('keydown', handleEsc);
@@ -114,13 +114,13 @@ const Sidebar: React.FC = () => {
           <Link to="/notifications" className={location.pathname === '/notifications' || location.pathname === '/favorites' ? 'active' : ''} onClick={() => setIsOpen(false)}>
             <NotificationsIcon sx={{ mr: 1 }} /> Bildirimler
           </Link>
-              <Link to="/profile" className={location.pathname === '/profile' ? 'active' : ''} onClick={() => setIsOpen(false)}>
-                <PersonIcon sx={{ mr: 1 }} /> Profil
-              </Link>
+          <Link to="/profile" className={location.pathname === '/profile' ? 'active' : ''} onClick={() => setIsOpen(false)}>
+            <PersonIcon sx={{ mr: 1 }} /> Profil
+          </Link>
           {user && (
             <button className="logout-btn" onClick={handleLogout}>
-                <LogoutIcon sx={{ mr: 1 }} /> Çıkış Yap
-              </button>
+              <LogoutIcon sx={{ mr: 1 }} /> Çıkış Yap
+            </button>
           )}
         </nav>
         <div className="favorites-section">
@@ -139,7 +139,7 @@ const Sidebar: React.FC = () => {
             )}
           </div>
         </div>
-          <ThemeSelector />
+        <ThemeSelector />
       </div>
     </>
   );

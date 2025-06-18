@@ -15,16 +15,6 @@ const app = express();
 const httpServer = createServer(app);
 const port = process.env.PORT || 3001;
 
-// Rate limiting configuration
-const limiter = rateLimit({
-  windowMs: process.env.RATE_LIMIT_WINDOW_MS || 900000, // 15 minutes
-  max: process.env.RATE_LIMIT_MAX_REQUESTS || 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
-});
-
-// Apply rate limiting to all routes
-app.use(limiter);
-
 // Güvenli CORS ayarları (slash'ı otomatik kaldır)
 const allowedOrigins = [
   'http://localhost:3000',

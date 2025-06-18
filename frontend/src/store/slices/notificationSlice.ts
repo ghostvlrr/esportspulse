@@ -1,5 +1,27 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { NotificationItem, NotificationPreferences } from '../../types/notification';
+
+export interface NotificationItem {
+  id: string;
+  title: string;
+  message: string;
+  timestamp: Date;
+  read: boolean;
+  type: 'matchStart' | 'scoreChange' | 'matchEnd' | 'news' | 'system';
+}
+
+export interface NotificationPreferences {
+  email: boolean;
+  push: boolean;
+  inApp: boolean;
+  matchUpdates: boolean;
+  newsUpdates: boolean;
+  systemUpdates: boolean;
+  matchStart: boolean;
+  scoreChange: boolean;
+  matchEnd: boolean;
+  news: boolean;
+  system: boolean;
+}
 
 interface NotificationState {
   notifications: NotificationItem[];
@@ -12,19 +34,19 @@ const initialState: NotificationState = {
   notifications: [],
   unreadCount: 0,
   preferences: {
-    matchStart: true,
-    scoreChange: true,
-    matchEnd: true,
-    news: true,
-    system: true,
     email: true,
     push: true,
     inApp: true,
     matchUpdates: true,
     newsUpdates: true,
     systemUpdates: true,
+    matchStart: true,
+    scoreChange: true,
+    matchEnd: true,
+    news: true,
+    system: true
   },
-  userId: null,
+  userId: null
 };
 
 const notificationSlice = createSlice({
@@ -57,16 +79,16 @@ const notificationSlice = createSlice({
       }
       state.notifications = state.notifications.filter(n => n.id !== action.payload);
     },
-    clearAllNotifications: (state) => {
-      state.notifications = [];
-      state.unreadCount = 0;
+    setNotifications: (state, action: PayloadAction<NotificationItem[]>) => {
+      state.notifications = action.payload;
+      state.unreadCount = action.payload.filter(n => !n.read).length;
     },
-    updatePreferences: (state, action: PayloadAction<Partial<NotificationPreferences>>) => {
-      state.preferences = { ...state.preferences, ...action.payload };
+    updatePreferences: (state, action: PayloadAction<NotificationPreferences>) => {
+      state.preferences = action.payload;
     },
-    setUserId: (state, action: PayloadAction<string | null>) => {
+    setUserId: (state, action: PayloadAction<string>) => {
       state.userId = action.payload;
-    },
+    }
   },
 });
 
@@ -75,9 +97,9 @@ export const {
   markAsRead,
   markAllAsRead,
   removeNotification,
-  clearAllNotifications,
+  setNotifications,
   updatePreferences,
-  setUserId,
+  setUserId
 } = notificationSlice.actions;
 
 export default notificationSlice.reducer; 

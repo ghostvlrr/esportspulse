@@ -1,6 +1,16 @@
 import React from 'react';
 import { Card, CardContent, Typography, Box, Avatar } from '@mui/material';
 
+function formatTimeUntilTr(timeStr) {
+    if (!timeStr) return '';
+    return timeStr
+        .replace(/from now/i, '')
+        .replace(/(\d+)d/g, '$1 gün')
+        .replace(/(\d+)h/g, '$1 saat')
+        .replace(/(\d+)m/g, '$1 dakika')
+        .trim();
+}
+
 const MatchCard = ({ match }) => {
     return (
         <Card sx={{ 
@@ -148,7 +158,11 @@ const MatchCard = ({ match }) => {
                             textShadow: match.time_until_match === 'LIVE' ? '0px 0px 8px rgba(255, 0, 245, 0.5)' : 'none',
                         }}
                     >
-                        {match.time_until_match || match.time_completed || 'Tarih belirtilmedi'}
+                        {match.time_until_match && match.time_until_match !== 'LIVE'
+                            ? formatTimeUntilTr(match.time_until_match)
+                            : match.time_until_match === 'LIVE'
+                                ? 'Canlı'
+                                : match.time_completed || 'Tarih belirtilmedi'}
                     </Typography>
                 </Box>
             </CardContent>

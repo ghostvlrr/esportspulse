@@ -1,8 +1,18 @@
+export interface NotificationSettings {
+  enabled: boolean;
+  beforeMatch: number;
+  matchStart: boolean;
+  matchEnd: boolean;
+  scoreUpdate: boolean;
+}
+
 export interface Team {
   id: string;
   name: string;
-  logo?: string;
-  region?: string;
+  logo: string;
+  game: string;
+  region: string;
+  notificationSettings: NotificationSettings;
   ranking?: number;
   wins?: number;
   losses?: number;

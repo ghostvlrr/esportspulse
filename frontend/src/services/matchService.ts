@@ -1,53 +1,68 @@
-import { api } from './api';
 import { Match } from '../types/match';
 
-interface MatchFilters {
-  status?: 'live' | 'upcoming' | 'completed';
-  date?: string;
-}
+export class MatchService {
+  private readonly baseUrl = 'http://localhost:3001/api';
+  private readonly maxRetries = 3;
+  private readonly retryDelay = 1000; // 1 saniye
 
-class MatchService {
-  async getMatches(filters?: MatchFilters): Promise<Match[]> {
+  private async fetchWithRetry(url: string, options: RequestInit = {}): Promise<Response> {
+    let lastError: Error | null = null;
+    
+    for (let i = 0; i < this.maxRetries; i++) {
+      try {
+        const response = await fetch(url, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
+          },
+          credentials: 'include'
+        });
+
+        if (response.status === 429) {
+          const retryAfter = response.headers.get('Retry-After');
+          const delay = retryAfter ? parseInt(retryAfter) * 1000 : this.retryDelay * Math.pow(2, i);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+
+        return response;
+      } catch (error) {
+        lastError = error as Error;
+        if (i < this.maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, this.retryDelay * Math.pow(2, i)));
+        }
+      }
+    }
+
+    throw lastError || new Error('Maksimum deneme sayısına ulaşıldı');
+  }
+
+  async getMatches(): Promise<Match[]> {
     try {
-      const response = await api.get('/matches', { params: filters });
-      return response.data;
+      const response = await this.fetchWithRetry(`${this.baseUrl}/matches`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
     } catch (error) {
-      console.error('Maçlar yüklenirken hata oluştu:', error);
-      throw error;
+      console.error('Maçlar alınırken hata:', error);
+      return []; // Hata durumunda boş dizi döndür
     }
   }
 
-  async getLiveMatches(): Promise<Match[]> {
+  async getMatchById(id: string): Promise<Match | null> {
     try {
-      const response = await api.get('/matches/live');
-      return response.data;
+      const response = await this.fetchWithRetry(`${this.baseUrl}/matches/${id}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
     } catch (error) {
-      console.error('Canlı maçlar yüklenirken hata oluştu:', error);
-      throw error;
+      console.error('Maç detayı alınırken hata:', error);
+      return null; // Hata durumunda null döndür
     }
   }
-
-  async getMatchById(id: string): Promise<Match> {
-    try {
-      const response = await api.get(`/matches/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Maç detayları yüklenirken hata oluştu:', error);
-      throw error;
-    }
-  }
-
-  async getMatchesByDate(date: string): Promise<Match[]> {
-    try {
-      const response = await api.get('/matches', {
-        params: { date, status: 'completed' }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Tarihe göre maçlar yüklenirken hata oluştu:', error);
-      throw error;
-    }
-  }
-}
-
-export default new MatchService(); 
+} 
