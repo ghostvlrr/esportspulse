@@ -243,37 +243,28 @@ const getTournamentLogo = (match: Match) => {
   return logoPath;
 };
 
-// Bildirim mesaj havuzları
-const finalMessages = [
-  "Büyük final zamanı! {team1} ile {team2} şampiyonluk için karşı karşıya!",
-  "Tarihe tanıklık et! {team1} vs {team2} finali başlıyor!",
-  "Şampiyon belli oluyor! {team1} ve {team2} kozlarını paylaşıyor!"
+// Heyecanlı, insansı bildirim mesaj havuzları
+const matchStartMessages = [
+  'Heyecan dorukta! {team1} ile {team2} maçı başlamak üzere! Hazır mısın?',
+  'Sahnede büyük kapışma! {team1} vs {team2} başlıyor!',
+  'Şimdi başlıyor! {team1} ve {team2} kozlarını paylaşacak!',
+  'Tarihi an! {team1} ile {team2} mücadelesi başlıyor!',
+  'Koltuklara kurul! {team1} vs {team2} maçı başlamak üzere!'
 ];
-const semiFinalMessages = [
-  "Yarı final heyecanı! {team1} ile {team2} finale bir adım uzaklıkta.",
-  "Finale giden yol: {team1} vs {team2} yarı finalde karşı karşıya!"
+const matchEndMessages = [
+  'Maç sona erdi! {team1} ile {team2} arasındaki mücadele bitti. Sonuçlar seni şaşırttı mı?',
+  'Heyecan dolu anlar sona erdi! {team1} vs {team2} maçı tamamlandı.',
+  'Büyük kapışma bitti! {team1} ve {team2} sahneden indi.',
+  'Son düdük çaldı! {team1} ile {team2} arasındaki maç sona erdi.',
+  'Kazanan belli oldu! {team1} vs {team2} maçı tamamlandı.'
 ];
-const groupMessages = [
-  "Grup aşaması başlıyor! {team1} ve {team2} sahnede.",
-  "Puanlar için mücadele: {team1} vs {team2} grup maçı!"
+const beforeMatchMessages = [
+  'Hazırlan! {team1} ile {team2} maçı birazdan başlıyor!',
+  'Son hazırlıklar! {team1} ve {team2} sahneye çıkmak üzere.',
+  'Geri sayım başladı! {team1} vs {team2} maçı için az kaldı.',
+  'Heyecan başlamak üzere! {team1} ile {team2} birazdan karşı karşıya.',
+  'Takımlar hazır! {team1} ve {team2} maçı başlamak üzere!'
 ];
-const showmatchMessages = [
-  "Gösteri zamanı! {team1} ile {team2} eğlenceli bir maçta karşı karşıya.",
-  "Şov başlasın! {team1} vs {team2} gösteri maçı için hazır."
-];
-const defaultMessages = [
-  "Heyecan başlıyor! {team1} vs {team2} maçı için bildirimler açık!",
-  "Hazır mısın? {team1} ile {team2} arasındaki mücadele başlamak üzere!",
-  "Maç başlıyor! {team1} ve {team2} karşı karşıya, gözünü ayırma!",
-  "Koltuklara kurul! {team1} vs {team2} maçı için bildirimler aktif.",
-  "Sahne senin! {team1} ile {team2} maçı başlamak üzere, heyecan dorukta!",
-  "Büyük an geldi! {team1} ve {team2} kozlarını paylaşacak!",
-  "Takımlar arenada! {team1} vs {team2} maçı için bildirimler açık.",
-  "Adrenalin tavan! {team1} ile {team2} maçı başlamak üzere.",
-  "Şampiyonluk yolunda {team1} ve {team2} karşı karşıya!",
-  "Efsane bir maç seni bekliyor: {team1} vs {team2}!"
-];
-
 function getRandomMessage(messages: string[], team1: string, team2: string) {
   const msg = messages[Math.floor(Math.random() * messages.length)];
   return msg.replace('{team1}', team1).replace('{team2}', team2);
@@ -461,28 +452,36 @@ const Matches: React.FC = () => {
 
           if (!matchDate) return match;
 
+          // Maç öncesi bildirim
+          if (match.notifications.beforeMatch && !match.time_completed && match.time_until_match !== 'LIVE') {
+            const timeUntilMatch = matchDate.getTime() - now.getTime();
+            const beforeMs = (match.notifications.beforeMatch || 15) * 60 * 1000;
+            if (timeUntilMatch <= beforeMs && timeUntilMatch > beforeMs - 60000) { // O dakika içinde
+              playNotificationSound();
+              showWebNotification('Maç Yaklaşıyor!', {
+                body: getRandomMessage(beforeMatchMessages, match.team1, match.team2),
+                icon: '/notification-icon.png'
+              });
+            }
+          }
+
           // Maç başlangıcı kontrolü
           if (match.notifications.matchStart && !match.time_completed && match.time_until_match !== 'LIVE') {
             const timeUntilMatch = matchDate.getTime() - now.getTime();
             if (timeUntilMatch <= 0 && timeUntilMatch > -60000) { // Son 1 dakika içinde
               playNotificationSound();
               showWebNotification('Maç Başladı!', {
-                body: `${match.team1} vs ${match.team2} maçı başladı!`,
+                body: getRandomMessage(matchStartMessages, match.team1, match.team2),
                 icon: '/notification-icon.png'
               });
             }
-          }
-
-          // Skor değişikliği kontrolü
-          if (match.notifications.scoreUpdate && match.time_until_match === 'LIVE') {
-            // Skor değişikliği kontrolü backend'den gelecek
           }
 
           // Maç sonu kontrolü
           if (match.notifications.matchEnd && match.time_completed) {
             playNotificationSound();
             showWebNotification('Maç Sona Erdi!', {
-              body: `${match.team1} vs ${match.team2} maçı sona erdi!`,
+              body: getRandomMessage(matchEndMessages, match.team1, match.team2),
               icon: '/notification-icon.png'
             });
           }
