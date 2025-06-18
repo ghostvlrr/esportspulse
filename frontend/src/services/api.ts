@@ -16,9 +16,6 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('API İsteği:', config.method?.toUpperCase(), config.url);
-    }
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -26,7 +23,6 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('API İstek Hatası:', error);
     return Promise.reject(error);
   }
 );
@@ -34,9 +30,6 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('API Yanıtı:', response.status, response.config.url);
-    }
     return response;
   },
   async (error) => {
@@ -105,7 +98,6 @@ export const matchService = {
       const response = await api.get('/matches', { params });
       return response.data;
     } catch (error) {
-      console.error('Maçlar alınırken hata:', error);
       return [];
     }
   },
@@ -114,7 +106,6 @@ export const matchService = {
       const response = await api.get(`/matches/${id}`);
       return response.data;
     } catch (error) {
-      console.error('Maç detayı alınırken hata:', error);
       return null;
     }
   },
@@ -123,7 +114,6 @@ export const matchService = {
       const response = await api.get('/matches/live');
       return response.data;
     } catch (error) {
-      console.error('Canlı maçlar alınırken hata:', error);
       return [];
     }
   },
@@ -135,7 +125,6 @@ export const teamService = {
       const response = await api.get('/teams', { params });
       return response.data;
     } catch (error) {
-      console.error('Takımlar alınırken hata:', error);
       return [];
     }
   },
@@ -144,7 +133,6 @@ export const teamService = {
       const response = await api.get(`/teams/${id}`);
       return response.data;
     } catch (error) {
-      console.error('Takım detayı alınırken hata:', error);
       return null;
     }
   },
@@ -153,7 +141,6 @@ export const teamService = {
       const response = await api.get(`/teams/${id}/stats`);
       return response.data;
     } catch (error) {
-      console.error('Takım istatistikleri alınırken hata:', error);
       return null;
     }
   },
@@ -165,7 +152,6 @@ export const newsService = {
       const response = await api.get('/news', { params });
       return response.data;
     } catch (error) {
-      console.error('Haberler alınırken hata:', error);
       return [];
     }
   },
@@ -174,7 +160,6 @@ export const newsService = {
       const response = await api.get(`/news/${id}`);
       return response.data;
     } catch (error) {
-      console.error('Haber detayı alınırken hata:', error);
       return null;
     }
   },
@@ -183,7 +168,6 @@ export const newsService = {
       const response = await api.get(`/news/category/${category}`);
       return response.data;
     } catch (error) {
-      console.error('Kategori haberleri alınırken hata:', error);
       return [];
     }
   },
@@ -195,7 +179,6 @@ export const userService = {
       const response = await api.get('/users/profile');
       return response.data;
     } catch (error) {
-      console.error('Profil bilgileri alınırken hata:', error);
       return null;
     }
   },
@@ -204,7 +187,6 @@ export const userService = {
       const response = await api.put('/users/profile', userData);
       return response.data;
     } catch (error) {
-      console.error('Profil güncellenirken hata:', error);
       throw error;
     }
   },
@@ -213,7 +195,6 @@ export const userService = {
       const response = await api.get('/users/favorites');
       return response.data;
     } catch (error) {
-      console.error('Favoriler alınırken hata:', error);
       return [];
     }
   },
@@ -222,7 +203,6 @@ export const userService = {
       const response = await api.post('/users/favorites', { type, id });
       return response.data;
     } catch (error) {
-      console.error('Favori eklenirken hata:', error);
       throw error;
     }
   },
@@ -231,7 +211,6 @@ export const userService = {
       const response = await api.delete(`/users/favorites/${type}/${id}`);
       return response.data;
     } catch (error) {
-      console.error('Favori kaldırılırken hata:', error);
       throw error;
     }
   },

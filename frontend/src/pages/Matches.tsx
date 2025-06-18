@@ -498,11 +498,8 @@ const Matches: React.FC = () => {
 
   useEffect(() => {
     if (matches.length > 0 && selectedDate) {
-      console.log('Seçilen:', formatDate(selectedDate, 'yyyy-MM-dd'));
       matches.forEach(m => {
         if (m.date) {
-          const matchDateObj = new Date(m.date);
-          console.log('Maç:', formatDate(matchDateObj, 'yyyy-MM-dd'), m);
         }
       });
     }
