@@ -126,7 +126,7 @@ const Notifications: React.FC = () => {
       }
     }
     return items;
-  }, [localStorage.length]);
+  }, []);
 
   useEffect(() => {
     setCurrentPage(1); // Bildirimler veya filtre değişince baştan başla
