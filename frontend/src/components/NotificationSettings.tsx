@@ -104,8 +104,8 @@ const NotificationSettings: React.FC = () => {
         <FormControlLabel
           control={
             <Switch
-              checked={preferences.scoreChange}
-              onChange={handlePreferenceChange('scoreChange')}
+              checked={preferences.scoreUpdate}
+              onChange={handlePreferenceChange('scoreUpdate')}
               color="primary"
             />
           }

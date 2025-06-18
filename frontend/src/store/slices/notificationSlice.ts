@@ -17,7 +17,7 @@ export interface NotificationPreferences {
   newsUpdates: boolean;
   systemUpdates: boolean;
   matchStart: boolean;
-  scoreChange: boolean;
+  scoreUpdate: boolean;
   matchEnd: boolean;
   news: boolean;
   system: boolean;
@@ -41,7 +41,7 @@ const initialState: NotificationState = {
     newsUpdates: true,
     systemUpdates: true,
     matchStart: true,
-    scoreChange: true,
+    scoreUpdate: true,
     matchEnd: true,
     news: true,
     system: true

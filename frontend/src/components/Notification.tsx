@@ -22,7 +22,7 @@ interface NotificationItem {
   message: string;
   timestamp: Date;
   read: boolean;
-  type: 'matchStart' | 'scoreChange' | 'matchEnd' | 'news' | 'system';
+  type: 'matchStart' | 'scoreUpdate' | 'matchEnd' | 'news' | 'system';
 }
 
 interface NotificationProps {
@@ -51,7 +51,7 @@ const Notification: React.FC<NotificationProps> = ({
     switch (type) {
       case 'matchStart':
         return '🎮';
-      case 'scoreChange':
+      case 'scoreUpdate':
         return '🎯';
       case 'matchEnd':
         return '🏆';
@@ -67,7 +67,7 @@ const Notification: React.FC<NotificationProps> = ({
           backgroundColor: 'rgba(220, 38, 38, 0.05)',
           borderLeft: '3px solid #DC2626'
         };
-      case 'scoreChange':
+      case 'scoreUpdate':
         return { 
           backgroundColor: 'rgba(185, 28, 28, 0.05)',
           borderLeft: '3px solid #B91C1C'

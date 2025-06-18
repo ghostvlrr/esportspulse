@@ -2,7 +2,7 @@ import { store } from '../store';
 import { addNotification, updatePreferences, NotificationPreferences, NotificationItem } from '../store/slices/notificationSlice';
 import { toast } from 'react-toastify';
 import { api } from './api';
-import { Notification } from '../types/notification';
+import type { Notification } from '../types/notification';
 
 // UUID üretici
 function generateUUID() {
@@ -19,6 +19,18 @@ function getAnonUserId() {
     localStorage.setItem('anonUserId', anonUserId);
   }
   return anonUserId;
+}
+
+// Bildirim sesi ve web notification fonksiyonları
+function playNotificationSound() {
+  const audio = new Audio('/notification.mp3');
+  audio.play();
+}
+
+function showWebNotification(title: string, options: NotificationOptions) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, options);
+  }
 }
 
 export class NotificationService {
@@ -100,6 +112,13 @@ export class NotificationService {
               pauseOnHover: true,
               draggable: true,
             });
+            if ((notification.type as string) === 'scoreUpdate' || (notification.type as string) === 'scoreChange') {
+              playNotificationSound();
+              showWebNotification('Skor Değişti!', {
+                body: notification.message,
+                icon: '/notification-icon.png'
+              });
+            }
           }
         } catch (error) {
           console.error('Bildirim işlenirken hata oluştu:', error);

@@ -579,7 +579,7 @@ setInterval(async () => {
         }
 
         // Skor değişikliği bildirimi
-        if (fav.notificationSettings?.scoreChange && match.lastScore !== match.currentScore) {
+        if (fav.notificationSettings?.scoreUpdate && match.lastScore !== match.currentScore) {
           const scoreDiff = match.currentScore - match.lastScore;
           const emoji = scoreDiff > 0 ? '🎯' : '😢';
           const message = scoreDiff > 0 
@@ -587,7 +587,7 @@ setInterval(async () => {
             : `Endişelenme! ${fav.teamName} takımımız her zaman geri döner! ${emoji} Yeni skor: ${match.currentScore} - Onlara güveniyoruz!`;
           
           notifications.push({
-            type: 'scoreChange',
+            type: 'scoreUpdate',
             message: message,
             matchId: match.id,
             team: fav.teamName,

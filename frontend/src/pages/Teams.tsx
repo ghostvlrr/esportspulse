@@ -11,7 +11,7 @@ import SearchIcon from '@mui/icons-material/Search';
 interface NotificationSettings {
   enabled: boolean;
   matchStart: boolean;
-  scoreChange: boolean;
+  scoreUpdate: boolean;
   matchEnd: boolean;
   beforeMatch: number;
 }
@@ -43,7 +43,7 @@ const Teams: React.FC = () => {
   const [tempSettings, setTempSettings] = useState<NotificationSettings>({
     enabled: true,
     matchStart: true,
-    scoreChange: true,
+    scoreUpdate: true,
     matchEnd: true,
     beforeMatch: 15
   });
@@ -356,8 +356,8 @@ const Teams: React.FC = () => {
             <FormControlLabel
               control={
                 <Switch
-                  checked={tempSettings.scoreChange}
-                  onChange={e => setTempSettings(prev => ({ ...prev, scoreChange: e.target.checked }))}
+                  checked={tempSettings.scoreUpdate}
+                  onChange={e => setTempSettings(prev => ({ ...prev, scoreUpdate: e.target.checked }))}
                   disabled={!tempSettings.enabled}
                 />
               }
