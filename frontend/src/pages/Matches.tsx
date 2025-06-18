@@ -265,6 +265,30 @@ const beforeMatchMessages = [
   'Heyecan başlamak üzere! {team1} ile {team2} birazdan karşı karşıya.',
   'Takımlar hazır! {team1} ve {team2} maçı başlamak üzere!'
 ];
+const defaultMessages = [
+  "Heyecan başlıyor! {team1} vs {team2} maçı için bildirimler açık!",
+  "Hazır mısın? {team1} ile {team2} arasındaki mücadele başlamak üzere!",
+  "Maç başlıyor! {team1} ve {team2} karşı karşıya, gözünü ayırma!",
+  "Koltuklara kurul! {team1} vs {team2} maçı için bildirimler aktif.",
+  "Sahne senin! {team1} ile {team2} maçı başlamak üzere, heyecan dorukta!"
+];
+const finalMessages = [
+  "Büyük final zamanı! {team1} ile {team2} şampiyonluk için karşı karşıya!",
+  "Tarihe tanıklık et! {team1} vs {team2} finali başlıyor!",
+  "Şampiyon belli oluyor! {team1} ve {team2} kozlarını paylaşıyor!"
+];
+const semiFinalMessages = [
+  "Yarı final heyecanı! {team1} ile {team2} finale bir adım uzaklıkta.",
+  "Finale giden yol: {team1} vs {team2} yarı finalde karşı karşıya!"
+];
+const groupMessages = [
+  "Grup aşaması başlıyor! {team1} ve {team2} sahnede.",
+  "Puanlar için mücadele: {team1} vs {team2} grup maçı!"
+];
+const showmatchMessages = [
+  "Gösteri zamanı! {team1} ile {team2} eğlenceli bir maçta karşı karşıya.",
+  "Şov başlasın! {team1} vs {team2} gösteri maçı için hazır."
+];
 function getRandomMessage(messages: string[], team1: string, team2: string) {
   const msg = messages[Math.floor(Math.random() * messages.length)];
   return msg.replace('{team1}', team1).replace('{team2}', team2);
