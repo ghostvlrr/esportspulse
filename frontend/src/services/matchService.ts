@@ -38,9 +38,18 @@ export class MatchService {
     throw lastError || new Error('Maksimum deneme sayısına ulaşıldı');
   }
 
-  async getMatches(): Promise<Match[]> {
+  async getMatches(params?: { status?: string; date?: string }): Promise<Match[]> {
     try {
-      const response = await this.fetchWithRetry(`${this.baseUrl}/matches`);
+      let url = `${this.baseUrl}/matches`;
+      if (params) {
+        const query = new URLSearchParams();
+        if (params.status) query.append('status', params.status);
+        if (params.date) query.append('date', params.date);
+        if (Array.from(query).length > 0) {
+          url += `?${query.toString()}`;
+        }
+      }
+      const response = await this.fetchWithRetry(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

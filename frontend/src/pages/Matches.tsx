@@ -344,6 +344,7 @@ const Matches: React.FC = () => {
         let response;
         const params: any = {};
         if (filter === 'past') {
+          params.status = 'past';
           if (selectedRawDate) {
             params.date = selectedRawDate;
           } else if (selectedDate) {
@@ -363,19 +364,13 @@ const Matches: React.FC = () => {
             }
             params.date = formatDate(dateToSend, 'yyyy-MM-dd');
           }
-        }
-        switch (filter) {
-          case 'live':
-            response = await matchService.getMatches();
-            break;
-          case 'upcoming':
-            response = await matchService.getMatches();
-            break;
-          case 'past':
-            response = await matchService.getMatches();
-            break;
-          default:
-            response = await matchService.getMatches();
+          response = await matchService.getMatches(params);
+        } else if (filter === 'live') {
+          response = await matchService.getMatches({ status: 'live' });
+        } else if (filter === 'upcoming') {
+          response = await matchService.getMatches({ status: 'upcoming' });
+        } else {
+          response = await matchService.getMatches();
         }
 
         if (!response || response.length === 0) {
